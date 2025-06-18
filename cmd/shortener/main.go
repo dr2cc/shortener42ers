@@ -8,11 +8,11 @@ import (
 
 func main() {
 	mux := http.NewServeMux()
-	storageInstance := storage.NewStorage()
+
+	storageInstance := storage.NewURLStorage(make(map[string]string))
 
 	mux.HandleFunc("POST /{$}", handlers.PostHandler(storageInstance))
-
-	mux.HandleFunc("GET /{id}", storageInstance.GetHandler)
+	mux.HandleFunc("GET /{id}", handlers.GetHandler(storageInstance))
 
 	http.ListenAndServe(":8080", mux)
 }
