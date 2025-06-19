@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"sh42ers/internal/config"
 	"sh42ers/internal/lib/random"
 	"strings"
 )
@@ -41,6 +42,7 @@ func PostHandler(urlSaver URLSaver) http.HandlerFunc {
 				url := string(body)
 
 				// // Генерируем короткий идентификатор и создаем запись в нашем хранилище
+				// //config.FlagURL соответствует "http://" + req.Host если не использовать аргументы
 				alias := random.NewRandomString(aliasLength)
 
 				// Объект urlSaver (переданный при создании хендлера из main)
@@ -59,7 +61,7 @@ func PostHandler(urlSaver URLSaver) http.HandlerFunc {
 
 				// Устанавливаем статус ответа 201
 				w.WriteHeader(http.StatusCreated)
-				fmt.Fprint(w, "http://"+r.Host+"/"+alias)
+				fmt.Fprint(w, config.FlagURL+"/"+alias)
 
 			} else {
 				http.Error(w, "Incorrect Content-Type. Expected text/plain", http.StatusBadRequest)
