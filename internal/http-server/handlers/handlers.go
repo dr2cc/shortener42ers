@@ -3,6 +3,7 @@ package handlers
 import (
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"sh42ers/internal/config"
 	"sh42ers/internal/lib/random"
@@ -26,7 +27,7 @@ type URLSaver interface {
 }
 
 // Функция PostHandler уровня пакета handlers
-func PostHandler(urlSaver URLSaver) http.HandlerFunc {
+func PostHandler(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			contentType := r.Header.Get("Content-Type")
@@ -61,7 +62,12 @@ func PostHandler(urlSaver URLSaver) http.HandlerFunc {
 
 				// Устанавливаем статус ответа 201
 				w.WriteHeader(http.StatusCreated)
-				fmt.Fprint(w, config.FlagURL+"/"+alias)
+				//fmt.Fprint(w, config.FlagURL+"/"+alias)
+				if config.FlagURL == "none" {
+					fmt.Fprint(w, "http://"+r.Host+"/"+alias)
+				} else {
+					fmt.Fprint(w, config.FlagURL+"/"+alias)
+				}
 
 			} else {
 				http.Error(w, "Incorrect Content-Type. Expected text/plain", http.StatusBadRequest)
@@ -82,7 +88,7 @@ type URLGetter interface {
 }
 
 // Функция GetHandler уровня пакета handlers
-func GetHandler(urlGeter URLGetter) http.HandlerFunc {
+func GetHandler(log *slog.Logger, urlGeter URLGetter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
