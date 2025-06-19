@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	maps "sh42ers/internal/storage"
@@ -19,6 +20,7 @@ func TestGetHandler(t *testing.T) {
 		name       string
 		method     string
 		input      *maps.URLStorage
+		log        *slog.Logger
 		want       string
 		wantStatus int
 	}{
@@ -56,7 +58,7 @@ func TestGetHandler(t *testing.T) {
 			req := httptest.NewRequest(tt.method, "/"+shortURL, nil) // bytes.NewBufferString("https://practicum.yandex.ru/")) //body)
 			rr := httptest.NewRecorder()
 
-			handler := http.HandlerFunc(GetHandler(tt.input))
+			handler := http.HandlerFunc(GetHandler(tt.log, tt.input))
 			handler.ServeHTTP(rr, req)
 
 			//// Пакет testify
@@ -76,6 +78,14 @@ func TestGetHandler(t *testing.T) {
 		})
 	}
 }
+
+// for _, tt := range tests {
+// 		t.Run(tt.name, func(t *testing.T) {
+// 			if got := GetHandler(tt.args.log, tt.args.urlGeter); !reflect.DeepEqual(got, tt.want) {
+// 				t.Errorf("GetHandler() = %v, want %v", got, tt.want)
+// 			}
+// 		})
+// 	}
 
 func TestPostHandler(t *testing.T) {
 	type args struct {
