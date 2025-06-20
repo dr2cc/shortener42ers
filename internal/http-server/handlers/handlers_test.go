@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	maps "sh42ers/internal/storage"
+	maps "sh42ers/internal/storage/map"
 	"strings"
 	"testing"
 
