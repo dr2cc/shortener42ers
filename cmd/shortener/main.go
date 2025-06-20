@@ -61,10 +61,6 @@ func main() {
 	router.Use(mwLogger.New(log))
 	router.Use(middleware.URLFormat) // Парсер URLов поступающих запросов
 
-	// // adv #start#
-	// router.Post("/", save.New(log, storage))
-	// // adv #end#
-
 	// Примитивное (based on map) хранилище
 	storageInstance := storage.NewURLStorage(make(map[string]string))
 
@@ -90,6 +86,8 @@ func main() {
 	// GetHandler принимает ...
 	router.Get("/{id}", handlers.GetHandler(log, storageInstance))
 
+	// servers
+	//
 	// // примитивный запуск сервера
 	//return http.ListenAndServe(config.FlagRunAddr, router)
 
@@ -133,35 +131,6 @@ func main() {
 	log.Info("server stopped")
 
 }
-
-// // инициализации зависимостей сервера перед запуском
-// func Run() error {
-// 	router := chi.NewRouter()
-
-// 	// storages
-
-// 	// Примитивное (based on map) хранилище
-// 	storageInstance := storage.NewURLStorage(make(map[string]string))
-
-// 	// routers
-// 	//
-// 	// В Go передача интерфейса параметром в функцию означает,
-// 	// что функция может принимать на вход объект любого типа,
-// 	// который реализует определенный интерфейс.
-// 	//
-// 	// PostHandler принимает параметром интерфейс URLSaver
-// 	// с единственным методом SaveURL(URL, alias string) error
-// 	// т.е. два строковых значения .
-// 	// НО! Самое важное- то, что мы передадим параметром должно
-// 	// реализовывать МЕТОДЫ интерфейса!
-// 	router.Post("/", handlers.PostHandler(storageInstance))
-// 	// GetHandler принимает ...
-// 	router.Get("/{id}", handlers.GetHandler(storageInstance))
-
-// 	// server
-// 	//fmt.Println("Running server on", flagRunAddr)
-// 	return http.ListenAndServe(config.FlagRunAddr, router)
-// }
 
 func setupLogger(env string) *slog.Logger {
 	var log *slog.Logger
