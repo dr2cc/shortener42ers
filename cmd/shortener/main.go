@@ -8,7 +8,7 @@ import (
 	"os/signal"
 	"sh42ers/internal/config"
 	handlers "sh42ers/internal/http-server/handlers"
-	mapStorage "sh42ers/internal/storage/map"
+	mapstorage "sh42ers/internal/storage/map"
 	"syscall"
 	"time"
 
@@ -62,7 +62,7 @@ func main() {
 	router.Use(middleware.URLFormat) // Парсер URLов поступающих запросов
 
 	// Примитивное (based on map) хранилище
-	storageInstance := mapStorage.NewURLStorage(make(map[string]string))
+	storageInstance := mapstorage.NewURLStorage(make(map[string]string))
 
 	// // sqlite.New или "подключает" файл db , а если его нет то создает
 	// storageInstance, err := sqlite.New("./storage.db")
