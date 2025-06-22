@@ -10,8 +10,6 @@ import (
 	"strings"
 )
 
-const aliasLength = 6
-
 // // Не забыть, что до go generate нужно установить библиотеку
 // // mockery имеет сложную установку, видимо этой библиотекой нужно пользоваться
 // // уже на другом уровне
@@ -44,7 +42,7 @@ func PostHandler(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 
 				// // Генерируем короткий идентификатор и создаем запись в нашем хранилище
 				// //config.FlagURL соответствует "http://" + req.Host если не использовать аргументы
-				alias := random.NewRandomString(aliasLength)
+				alias := random.NewRandomString(config.AliasLength)
 
 				// Объект urlSaver (переданный при создании хендлера из main)
 				// используется именно тут!

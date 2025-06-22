@@ -6,6 +6,8 @@ import (
 	"time"
 )
 
+const AliasLength = 6
+
 // переменная FlagRunAddr содержит адрес и порт для запуска сервера
 var FlagRunAddr string
 
