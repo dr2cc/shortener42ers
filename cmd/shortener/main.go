@@ -7,7 +7,8 @@ import (
 	"os"
 	"os/signal"
 	"sh42ers/internal/config"
-	handlers "sh42ers/internal/http-server/handlers"
+	"sh42ers/internal/http-server/handlers/redirect"
+	"sh42ers/internal/http-server/handlers/url/save"
 	mapstorage "sh42ers/internal/storage/map"
 	"syscall"
 	"time"
@@ -76,15 +77,15 @@ func main() {
 	// что функция может принимать на вход объект любого типа,
 	// который реализует определенный интерфейс.
 	//
-	// PostHandler принимает параметром интерфейс URLSaver
+	// Хендлер с методом POST принимает параметром интерфейс URLSaver
 	// с единственным методом SaveURL(URL, alias string) error
 	// т.е. два строковых значения .
 	// НО! Самое важное- то, что мы передадим параметром должно
 	// реализовывать МЕТОДЫ интерфейса!
 
-	router.Post("/", handlers.PostHandler(log, storageInstance))
-	// GetHandler принимает ...
-	router.Get("/{id}", handlers.GetHandler(log, storageInstance))
+	router.Post("/", save.New(log, storageInstance))
+	// Хендлер с методом GET принимает ...
+	router.Get("/{id}", redirect.New(log, storageInstance))
 
 	// servers
 	//
