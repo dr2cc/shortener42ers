@@ -43,7 +43,7 @@ func TestSaveNew(t *testing.T) {
 
 			rr := httptest.NewRecorder()
 
-			handler := http.HandlerFunc(New(slog.New(slog.NewJSONHandler(os.Stdout, nil)), tt.ts.urlSaver))
+			handler := http.HandlerFunc(NewText(slog.New(slog.NewJSONHandler(os.Stdout, nil)), tt.ts.urlSaver))
 			handler.ServeHTTP(rr, req)
 
 			// Пакет tesify

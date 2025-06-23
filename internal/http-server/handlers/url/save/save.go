@@ -24,8 +24,7 @@ type URLSaver interface {
 	SaveURL(URL, alias string) error
 }
 
-// Функция PostHandler уровня пакета handlers
-func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
+func NewText(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			contentType := r.Header.Get("Content-Type")

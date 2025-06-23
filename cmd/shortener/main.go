@@ -83,7 +83,7 @@ func main() {
 	// НО! Самое важное- то, что мы передадим параметром должно
 	// реализовывать МЕТОДЫ интерфейса!
 
-	router.Post("/", save.New(log, storageInstance))
+	router.Post("/", save.NewText(log, storageInstance))
 	// Хендлер с методом GET принимает ...
 	router.Get("/{id}", redirect.New(log, storageInstance))
 
