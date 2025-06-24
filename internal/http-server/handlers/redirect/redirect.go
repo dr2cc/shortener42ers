@@ -9,6 +9,8 @@ import (
 // В Go передача интерфейса параметром в функцию означает,
 // что функция может принимать на вход объект любого типа,
 // который реализует определенный интерфейс.
+
+// go::generate mockgen -source=redirect.go -destination=mocks/mock.go
 type URLGetter interface {
 	// Метод GetURL реализуется в обоих хранилищах- maps и sqlite
 	// Так они оба реализуют интерфейс URLGetter

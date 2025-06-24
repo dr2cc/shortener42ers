@@ -18,7 +18,7 @@ import (
 // // go install github.com/vektra/mockery/v2@v2.20.0
 //go::generate go run github.com/vektra/mockery/v2@v2.20.0 --name=URLSaver
 
-// go::generate mockgen -source=handlers.go -destination=mocks/mock.go
+//go:generate mockgen -source=save.go -destination=mocks/mock.go
 type URLSaver interface {
 	// Метод SaveURL реализуется в обоих хранилищах- maps и sqlite
 	SaveURL(URL, alias string) error
