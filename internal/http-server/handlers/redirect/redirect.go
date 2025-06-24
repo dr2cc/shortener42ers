@@ -17,8 +17,9 @@ type URLGetter interface {
 
 func New(log *slog.Logger, urlGeter URLGetter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
+		//switch r.Method
+		if r.Method == http.MethodGet {
+			//case http.MethodGet:
 			alias := strings.TrimPrefix(r.RequestURI, "/")
 
 			url, err := urlGeter.GetURL(alias)
@@ -30,9 +31,10 @@ func New(log *slog.Logger, urlGeter URLGetter) http.HandlerFunc {
 
 			w.Header().Set("Location", url)
 			w.WriteHeader(http.StatusTemporaryRedirect)
-		default:
-			w.Header().Set("Location", "Method not allowed")
-			w.WriteHeader(http.StatusBadRequest)
+		} else {
+			http.Error(w, "Method not allowed", http.StatusBadRequest)
+			// w.Header().Set("Location", "Method not allowed")
+			// w.WriteHeader(http.StatusBadRequest)
 		}
 	}
 }
