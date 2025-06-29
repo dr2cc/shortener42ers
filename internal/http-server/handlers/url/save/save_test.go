@@ -11,6 +11,42 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// // Так не работает!
+// // Взять за основу Тузова, но по примеру gomockExample!!!
+// func TestSaveMock(t *testing.T) {
+// 	ctrl := gomock.NewController(t)
+// 	defer ctrl.Finish()
+
+// 	// Create a mock object for the UserRepository interface
+// 	mockRepo := mock_save.NewMockURLSaver(ctrl)
+
+// 	// Set the expected behavior:
+// 	// when GetUserByID is called with "1", return a user.
+// 	// Установим ожидаемое поведение (и передадим ожидаемые значения):
+// 	// когда GetUserByID вызывается с параметром "1", возвращается имя пользователя.
+// 	mockRepo.EXPECT().
+// 	SaveURL("https://practicum.yandex.ru/","6ba7b811").
+// 	Return()
+// 		// GetUserByID("1").
+// 		// Return(&models.User{ID: "1", Name: "Alex"}, nil)
+
+// 	// serviceTest := service.NewUserService(mockRepo)
+// 	// user, err := serviceTest.GetUser("1")
+
+// 	// Я переделал в одну строчку. Мне так понятнее, а сути не меняет
+// 	// Здесь вызов тестируемого метода GetUser
+// 	// Если параметр "1", то все будет в порядке.
+// 	user, err := service.NewUserService(mockRepo).GetUser("1")
+
+// 	if err != nil {
+// 		t.Fatalf("Expected no error, got %v", err)
+// 	}
+
+// 	if user.ID != "1" {
+// 		t.Errorf("Expected user ID to be '1', got %s", user.ID)
+// 	}
+// }
+
 func TestSaveNew(t *testing.T) {
 	type args struct {
 		urlSaver URLSaver
