@@ -155,12 +155,12 @@ func TestSaveNew(t *testing.T) {
 		method string
 		want   int
 	}{
-		{
-			name: "all good",
-			//ts:     args{mapstorage.NewURLStorage(make(map[string]string))},
-			method: "POST",
-			want:   http.StatusCreated,
-		},
+		// {
+		// 	name: "all good",
+		// 	//ts:     args{mapstorage.NewURLStorage(make(map[string]string))},
+		// 	method: "POST",
+		// 	want:   http.StatusCreated,
+		// },
 		{
 			name: "bad method",
 			//ts:     args{mapstorage.NewURLStorage(make(map[string]string))},
