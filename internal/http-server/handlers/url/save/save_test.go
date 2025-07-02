@@ -5,10 +5,13 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	mapstorage "sh42ers/internal/storage/map"
+	mock_save "sh42ers/internal/http-server/handlers/url/save/mocks"
+
+	//mapstorage "sh42ers/internal/storage/map"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
 // // Так не работает!
@@ -133,25 +136,34 @@ import (
 // Прямое обращение к другому участку кода,
 // который я сам хочу заменить (на sqlite)
 func TestSaveNew(t *testing.T) {
-	type args struct {
-		urlSaver URLSaver
-	}
+	// //
+	// ctrl := gomock.NewController(t)
+	// mockStorage := *mock_save.NewMockURLSaver(ctrl)
+	// //
+
+	// type args struct {
+	// 	urlSaver URLSaver
+	// }
+
+	//// СПОТЫКАЕТСЯ mock на проверке, когда все в порядке.
+	//// "Плохой" метод сюда не заходит внутрь NewText
+	//// Нужно переделать по Тузовским образцам!!
 
 	tests := []struct {
-		name   string
-		ts     args
+		name string
+		//ts     args
 		method string
 		want   int
 	}{
 		{
-			name:   "all good",
-			ts:     args{mapstorage.NewURLStorage(make(map[string]string))},
+			name: "all good",
+			//ts:     args{mapstorage.NewURLStorage(make(map[string]string))},
 			method: "POST",
 			want:   http.StatusCreated,
 		},
 		{
-			name:   "bad method",
-			ts:     args{mapstorage.NewURLStorage(make(map[string]string))},
+			name: "bad method",
+			//ts:     args{mapstorage.NewURLStorage(make(map[string]string))},
 			method: "GET",
 			want:   http.StatusBadRequest,
 		},
@@ -159,12 +171,18 @@ func TestSaveNew(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			// Начинаю использовать моки
+			ctrl := gomock.NewController(t)
+			mockStorage := mock_save.NewMockURLSaver(ctrl)
+			//
+
 			req := httptest.NewRequest(tt.method, "/", nil) // bytes.NewBufferString("https://practicum.yandex.ru/"))
 			req.Header.Set("Content-Type", "text/plain")
 
 			rr := httptest.NewRecorder()
 
-			handler := http.HandlerFunc(NewText(slog.New(slog.NewJSONHandler(os.Stdout, nil)), tt.ts.urlSaver))
+			//handler := http.HandlerFunc(NewText(slog.New(slog.NewJSONHandler(os.Stdout, nil)), tt.ts.urlSaver))
+			handler := http.HandlerFunc(NewText(slog.New(slog.NewJSONHandler(os.Stdout, nil)), mockStorage))
 			handler.ServeHTTP(rr, req)
 
 			// Пакет tesify

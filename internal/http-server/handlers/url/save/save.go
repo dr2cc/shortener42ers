@@ -43,6 +43,10 @@ func NewText(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 				// //config.FlagURL соответствует "http://" + req.Host если не использовать аргументы
 				alias := random.NewRandomString(config.AliasLength)
 
+				//// ЗДЕСЬ СПОТЫКАЕТСЯ mock на проверке, когда все в порядке.
+				//// "Плохой" метод сюда не заходит!
+				//// Нужно переделать по Тузовским образцам!!
+
 				// Объект urlSaver (переданный при создании хендлера из main)
 				// используется именно тут!
 				if urlSaver.SaveURL(url, alias) != nil {
