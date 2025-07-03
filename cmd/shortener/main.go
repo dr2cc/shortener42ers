@@ -9,12 +9,12 @@ import (
 	"sh42ers/internal/config"
 	"sh42ers/internal/http-server/handlers/redirect"
 	"sh42ers/internal/http-server/handlers/url/save"
-	mapstorage "sh42ers/internal/storage/map"
 	"syscall"
 	"time"
 
 	mwLogger "sh42ers/internal/http-server/middleware/logger"
 	"sh42ers/internal/lib/logger/sl"
+	"sh42ers/internal/storage/sqlite"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -62,14 +62,14 @@ func main() {
 	router.Use(mwLogger.New(log))
 	router.Use(middleware.URLFormat) // Парсер URLов поступающих запросов
 
-	// Примитивное (based on map) хранилище
-	storageInstance := mapstorage.NewURLStorage(make(map[string]string))
+	// // Примитивное (based on map) хранилище
+	// storageInstance := mapstorage.NewURLStorage(make(map[string]string))
 
-	// // sqlite.New или "подключает" файл db , а если его нет то создает
-	// storageInstance, err := sqlite.New("./storage.db")
-	// if err != nil {
-	// 	log.Error("failed to initialize storage", sl.Err(err))
-	// }
+	// sqlite.New или "подключает" файл db , а если его нет то создает
+	storageInstance, err := sqlite.New("./storage.db")
+	if err != nil {
+		log.Error("failed to initialize storage", sl.Err(err))
+	}
 
 	// routers
 	//
@@ -83,7 +83,12 @@ func main() {
 	// НО! Самое важное- то, что мы передадим параметром должно
 	// реализовывать МЕТОДЫ интерфейса!
 
-	router.Post("/", save.NewText(log, storageInstance))
+	// к iter7 - эндпоинт POST /api/shorten,
+	// который будет принимать в теле запроса JSON-объект
+	router.Post("/api/shorten", save.New(log, storageInstance))
+
+	// // "Старый" эндпойнт. Нужно исправить под новый storageInstance
+	//router.Post("/", save.NewText(log, storageInstance))
 	// Хендлер с методом GET принимает ...
 	router.Get("/{id}", redirect.New(log, storageInstance))
 
