@@ -19,12 +19,12 @@ import (
 //go::generate go run github.com/vektra/mockery/v2@v2.20.0 --name=URLSaver
 
 //go:generate mockgen -source=save.go -destination=mocks/mock.go
-type URLSaver interface {
+type URLtextSaver interface {
 	// Метод SaveURL реализуется в обоих хранилищах- maps и sqlite
 	SaveURL(URL, alias string) error
 }
 
-func NewText(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
+func NewText(log *slog.Logger, urlSaver URLtextSaver) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			contentType := r.Header.Get("Content-Type")
