@@ -12,7 +12,7 @@ import (
 	"syscall"
 	"time"
 
-	mwLogger "sh42ers/internal/http-server/middleware/logger"
+	myLog "sh42ers/internal/http-server/middleware/logger"
 	"sh42ers/internal/lib/logger/sl"
 	"sh42ers/internal/storage/sqlite"
 
@@ -49,18 +49,18 @@ func main() {
 	log := setupLogger(cfg.Env)
 	log = log.With(slog.String("env", cfg.Env)) // к каждому сообщению будет добавляться поле с информацией о текущем окружении
 
-	log.Info("initializing server", slog.String("address", cfg.Address)) // Помимо сообщения выведем параметр с адресом
+	log.Info("init server", slog.String("address", cfg.Address)) // Помимо сообщения выведем параметр с адресом
 	log.Debug("logger debug mode enabled")
 
 	//
 	router := chi.NewRouter()
 
-	router.Use(middleware.RequestID) // Добавляет request_id в каждый запрос, для трейсинга
-	router.Use(middleware.Logger)    // Логирование всех запросов
-	router.Use(middleware.Recoverer) // Если где-то внутри сервера (обработчика запроса) произойдет паника, приложение не должно упасть
-	//переопределяем внутренний логгер
-	router.Use(mwLogger.New(log))
-	router.Use(middleware.URLFormat) // Парсер URLов поступающих запросов
+	router.Use(middleware.RequestID) // трейсинг? (добавлю request_id в каждый запрос)
+	router.Use(middleware.Logger)    // логирование всех запросов
+	router.Use(middleware.Recoverer) // если внутри произойдет паника, приложение не упадет
+	//меняю логгер на мой
+	router.Use(myLog.New(log))
+	router.Use(middleware.URLFormat) // парсер URLов поступающих запросов
 
 	// // Примитивное (based on map) хранилище
 	// storageInstance := mapstorage.NewURLStorage(make(map[string]string))
@@ -88,7 +88,7 @@ func main() {
 	router.Post("/api/shorten", save.New(log, storageInstance))
 
 	// // "Старый" эндпойнт. Нужно исправить под новый storageInstance
-	//router.Post("/", save.NewText(log, storageInstance))
+	//router.Post("/", saveText.NewText(log, storageInstance))
 	// Хендлер с методом GET принимает ...
 	router.Get("/{id}", redirect.New(log, storageInstance))
 
