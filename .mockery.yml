@@ -1,5 +1,6 @@
 all: false
 dir: '{{.InterfaceDir}}'
+# Название файла с моком. Называем как нужно.
 filename: mockery_test.go
 force-file-write: true
 formatter: goimports
@@ -12,6 +13,7 @@ require-template-schema-exists: true
 template: testify
 template-schema: '{{.Template}}.schema.json'
 packages:
+# Здесь цель мока. Думаю можно менять в ручную.
   sh42ers/internal/http-server/handlers/url/save:
     config:
       all: true
