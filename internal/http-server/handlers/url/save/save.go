@@ -2,6 +2,7 @@ package save
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
@@ -23,8 +24,10 @@ type Request struct {
 }
 
 type Response struct {
-	resp.Response
-	Alias string `json:"alias,omitempty"`
+	// // в iter7 у Яндекса одна строка
+	// // тест сломается!
+	//resp.Response
+	Alias string `json:"result,omitempty"` //`json:"alias,omitempty"`
 }
 
 // // TODO: move to config if needed
@@ -62,8 +65,7 @@ func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 
 		err := render.DecodeJSON(r.Body, &req)
 		if errors.Is(err, io.EOF) {
-			// Такую ошибку встретим, если получили запрос с пустым телом.
-			// Обработаем её отдельно
+			// отдельно если тело запроса пустое
 			log.Error("request body is empty")
 
 			render.JSON(w, r, resp.Error("empty request"))
@@ -113,13 +115,19 @@ func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 
 		log.Info("url added", slog.Int64("id", id))
 
-		responseOK(w, r, alias)
+		fmt.Println("ЗДЕСЬ нужен адрес запроса, без api/shorten или сам адрес сервера http://localhost:8080/", req.URL)
+		// возвращаемая Яндекс строка
+		strResp := "http://localhost:8080/" + alias
+		//
+
+		//responseOK(w, r, alias)
+		responseOK(w, r, strResp)
 	}
 }
 
 func responseOK(w http.ResponseWriter, r *http.Request, alias string) {
 	render.JSON(w, r, Response{
-		Response: resp.OK(),
-		Alias:    alias,
+		//	Response: resp.OK(),
+		Alias: alias,
 	})
 }

@@ -87,8 +87,8 @@ func main() {
 	// который будет принимать в теле запроса JSON-объект
 	router.Post("/api/shorten", save.New(log, storageInstance))
 
-	// // "Старый" эндпойнт. Нужно исправить под новый storageInstance
-	//router.Post("/", saveText.NewText(log, storageInstance))
+	// // Текстовый POST эндпойнт. Нужно исправить под новый storageInstance
+	//router.Post("/", saveText.New(log, storageInstance))
 	// Хендлер с методом GET принимает ...
 	router.Get("/{id}", redirect.New(log, storageInstance))
 

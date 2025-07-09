@@ -24,7 +24,7 @@ type URLtextSaver interface {
 	SaveURL(URL, alias string) error
 }
 
-func NewText(log *slog.Logger, urlSaver URLtextSaver) http.HandlerFunc {
+func New(log *slog.Logger, urlSaver URLtextSaver) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			contentType := r.Header.Get("Content-Type")

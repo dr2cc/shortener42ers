@@ -68,7 +68,7 @@ func (s *Storage) SaveURL(urlToSave string, alias string) (int64, error) {
 }
 
 // // метод SaveURL типа *Storage
-// // реализует интерфейс URLSaver (Тузовский, описан в handlers.go)
+// // реализует интерфейс URLSaver (Тй, описан в handlers.go)
 // func (s *Storage) SaveURL(urlToSave string, alias string) error {
 // 	const op = "storage.sqlite.SaveURL"
 
