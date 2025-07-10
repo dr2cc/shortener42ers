@@ -2,7 +2,6 @@ package save
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
@@ -26,7 +25,7 @@ type Request struct {
 type Response struct {
 	// // в iter7 у Яндекса одна строка
 	// // тест сломается!
-	//resp.Response
+	// resp.Response
 	Alias string `json:"result,omitempty"` //`json:"alias,omitempty"`
 }
 
@@ -115,9 +114,8 @@ func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 
 		log.Info("url added", slog.Int64("id", id))
 
-		fmt.Println("ЗДЕСЬ нужен адрес запроса, без api/shorten или сам адрес сервера http://localhost:8080/", req.URL)
 		// возвращаемая Яндекс строка
-		strResp := "http://localhost:8080/" + alias
+		strResp := "http://" + r.Host + "/" + alias
 		//
 
 		//responseOK(w, r, alias)
