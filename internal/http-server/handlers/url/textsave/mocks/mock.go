@@ -6,8 +6,8 @@
 //	mockgen -source=saveText.go -destination=mocks/mock.go
 //
 
-// Package mock_saveText is a generated GoMock package.
-package mock_saveText
+// Package mock_savetext is a generated GoMock package.
+package mock_savetext
 
 import (
 	reflect "reflect"

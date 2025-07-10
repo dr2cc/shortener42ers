@@ -5,13 +5,14 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	mock_saveText "sh42ers/internal/http-server/handlers/url/saveText/mocks"
 
 	//mapstorage "sh42ers/internal/storage/map"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
+
+	mock_saveText "sh42ers/internal/http-server/handlers/url/textsave/mocks"
 )
 
 // Я проверяю только правильность методов.
