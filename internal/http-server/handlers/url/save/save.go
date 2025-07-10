@@ -114,9 +114,11 @@ func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 
 		log.Info("url added", slog.Int64("id", id))
 
-		// возвращаемая Яндекс строка
+		// возвращаемая Ян строка
 		strResp := "http://" + r.Host + "/" + alias
-		//
+
+		// Устанавливаем статус ответа 201
+		w.WriteHeader(http.StatusCreated)
 
 		//responseOK(w, r, alias)
 		responseOK(w, r, strResp)
@@ -125,6 +127,7 @@ func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 
 func responseOK(w http.ResponseWriter, r *http.Request, alias string) {
 	render.JSON(w, r, Response{
+		// // В Ян одна строка
 		//	Response: resp.OK(),
 		Alias: alias,
 	})
