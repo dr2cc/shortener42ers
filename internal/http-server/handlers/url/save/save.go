@@ -1,6 +1,7 @@
 package save
 
 import (
+	"encoding/json"
 	"errors"
 	"io"
 	"log/slog"
@@ -62,7 +63,10 @@ func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 
 		var req Request
 
-		err := render.DecodeJSON(r.Body, &req)
+		//err := render.DecodeJSON(r.Body, &req)
+
+		// В Ян нельзя пользоваться render , пробую json
+		err := json.Unmarshal(r.Body, &req)
 		if errors.Is(err, io.EOF) {
 			// отдельно если тело запроса пустое
 			log.Error("request body is empty")
@@ -117,11 +121,16 @@ func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 		// возвращаемая Ян строка
 		strResp := "http://" + r.Host + "/" + alias
 
-		// Устанавливаем статус ответа 201
-		w.WriteHeader(http.StatusCreated)
+		// // Устанавливаем статус ответа 201
+		// // После этой установки тип ответа становится text!
+		// // Нам этого не нужно!
+		// w.WriteHeader(http.StatusCreated)
+		// // Эта конструкция ситуацию не исправляяет. Видимо статус нужно задавать в другом месте
+		// w.Header().Set("Content-Type", "application/json")
 
 		//responseOK(w, r, alias)
 		responseOK(w, r, strResp)
+
 	}
 }
 
