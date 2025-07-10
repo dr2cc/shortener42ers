@@ -11,18 +11,16 @@ import (
 	"strings"
 )
 
-// // Не забыть, что до go generate нужно установить библиотеку
-// // mockery имеет сложную установку, видимо этой библиотекой нужно пользоваться
-// // уже на другом уровне
-// // Еще момент! go run с описанием версии относится к go 1.17, не факт,что так работает в 1.23
-// // Установку go install они не советуют (сайт https://vektra.github.io/mockery/latest/)
-// // go install github.com/vektra/mockery/v2@v2.20.0
-//go::generate go run github.com/vektra/mockery/v2@v2.20.0 --name=URLSaver
-
+// // До go generate нужно установить библиотеку
+// // mockery имеет сложную установку, реализовал в POST json ендпойнте
+//
 //go:generate mockgen -source=saveText.go -destination=mocks/mock.go
 type URLtextSaver interface {
-	// Метод SaveURL реализуется в обоих хранилищах- maps и sqlite
-	SaveURL(URL, alias string) error
+	// // Метод SaveURL реализуется в обоих хранилищах- maps и sqlite
+	// // Но в maps я не делал id (для лога), а в sqlite он уже есть
+	// // История их похожести закончилась
+	//SaveURL(URL, alias string) error
+	SaveURL(urlToSave string, alias string) (int64, error)
 }
 
 func New(log *slog.Logger, urlSaver URLtextSaver) http.HandlerFunc {
@@ -50,17 +48,14 @@ func New(log *slog.Logger, urlSaver URLtextSaver) http.HandlerFunc {
 
 				// Объект urlSaver (переданный при создании хендлера из main)
 				// используется именно тут!
-				if urlSaver.SaveURL(url, alias) != nil {
+				id, err := urlSaver.SaveURL(url, alias)
+				//if urlSaver.SaveURL(url, alias) != nil {
+				if err != nil {
 					fmt.Println("failed to add url")
 					return
 				}
 
-				// id, err := urlSaver.SaveURL(url, alias)
-
-				// if err != nil {
-				// 	fmt.Println("failed to add url")
-				// 	return
-				// }
+				log.Info("url added", slog.Int64("id", id))
 
 				// Устанавливаем статус ответа 201
 				w.WriteHeader(http.StatusCreated)

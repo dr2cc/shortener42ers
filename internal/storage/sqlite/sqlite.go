@@ -42,6 +42,7 @@ func New(storagePath string) (*Storage, error) {
 
 // В iter5 был не нужен id
 // В iter7 нужен
+// метод SaveURL типа *Storage , реализует интерфейс URLSaver
 func (s *Storage) SaveURL(urlToSave string, alias string) (int64, error) {
 	const op = "storage.sqlite.SaveURL"
 
@@ -67,30 +68,6 @@ func (s *Storage) SaveURL(urlToSave string, alias string) (int64, error) {
 	return id, nil
 }
 
-// // метод SaveURL типа *Storage
-// // реализует интерфейс URLSaver (Тй, описан в handlers.go)
-// func (s *Storage) SaveURL(urlToSave string, alias string) error {
-// 	const op = "storage.sqlite.SaveURL"
-
-// 	stmt, err := s.db.Prepare("INSERT INTO url(url, alias) VALUES(?, ?)")
-// 	if err != nil {
-// 		return fmt.Errorf("%s: %w", op, err)
-// 	}
-
-// 	res, err := stmt.Exec(urlToSave, alias)
-// 	if err != nil {
-// 		if sqliteErr, ok := err.(sqlite3.Error); ok && sqliteErr.ExtendedCode == sqlite3.ErrConstraintUnique {
-// 			return fmt.Errorf("%s: %w", op, storage.ErrURLExists)
-// 		}
-
-// 		return fmt.Errorf("%s: %w", op, err)
-// 	}
-
-// 	id, err := res.LastInsertId()
-// 	if err != nil {
-// 		return fmt.Errorf("%s: failed to get last insert id: %w", op, err)
-// 	}
-
 // 	// Изобретение для обхода ненужности в iter5 id
 // 	if reflect.TypeOf(id).Kind() != reflect.Int64 {
 // 		return fmt.Errorf("%s: failed id: %w", op, err)
@@ -100,7 +77,7 @@ func (s *Storage) SaveURL(urlToSave string, alias string) (int64, error) {
 // }
 
 // метод GetURL типа *Storage
-// реализует интерфейс URLGeter (мой, описан в handlers.go)
+// реализует интерфейс URLGeter (написан для Ян, описан в handlers.go)
 func (s *Storage) GetURL(alias string) (string, error) {
 	const op = "storage.sqlite.GetURL"
 

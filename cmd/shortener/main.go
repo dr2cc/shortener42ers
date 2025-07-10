@@ -9,6 +9,7 @@ import (
 	"sh42ers/internal/config"
 	"sh42ers/internal/http-server/handlers/redirect"
 	"sh42ers/internal/http-server/handlers/url/save"
+	savetext "sh42ers/internal/http-server/handlers/url/textsave"
 	"syscall"
 	"time"
 
@@ -63,6 +64,8 @@ func main() {
 	router.Use(middleware.URLFormat) // парсер URLов поступающих запросов
 
 	// // Примитивное (based on map) хранилище
+	// // С июля 2025 не думаю, что пригодиться, но если вдруг..
+	// // То не забыть реализовать id для логгера
 	// storageInstance := mapstorage.NewURLStorage(make(map[string]string))
 
 	// sqlite.New или "подключает" файл db , а если его нет то создает
@@ -83,12 +86,12 @@ func main() {
 	// НО! Самое важное- то, что мы передадим параметром должно
 	// реализовывать МЕТОДЫ интерфейса!
 
-	// к iter7 - эндпоинт POST /api/shorten,
+	// К iter7 - эндпоинт POST /api/shorten,
 	// который будет принимать в теле запроса JSON-объект
 	router.Post("/api/shorten", save.New(log, storageInstance))
 
-	// // Текстовый POST эндпойнт. Нужно исправить под новый storageInstance
-	//router.Post("/", savetext.New(log, storageInstance))
+	// Текстовый POST эндпойнт
+	router.Post("/", savetext.New(log, storageInstance))
 	// Хендлер с методом GET принимает ...
 	router.Get("/{id}", redirect.New(log, storageInstance))
 
