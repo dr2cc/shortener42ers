@@ -1,4 +1,4 @@
-package saveText
+package savetext
 
 import (
 	"fmt"
