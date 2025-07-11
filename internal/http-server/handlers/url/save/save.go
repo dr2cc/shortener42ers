@@ -66,7 +66,12 @@ func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 		//err := render.DecodeJSON(r.Body, &req)
 
 		// В Ян нельзя пользоваться render , пробую json
-		err := json.Unmarshal(r.Body, &req)
+		body, fail := io.ReadAll(r.Body)
+		if fail != nil {
+			http.Error(w, "Failed to read request body", http.StatusBadRequest)
+			return
+		}
+		err := json.Unmarshal(body, &req)
 		if errors.Is(err, io.EOF) {
 			// отдельно если тело запроса пустое
 			log.Error("request body is empty")
