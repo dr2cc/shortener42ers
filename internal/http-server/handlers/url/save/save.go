@@ -30,9 +30,8 @@ type Response struct {
 	Alias string `json:"result,omitempty"` //`json:"alias,omitempty"`
 }
 
-// // TODO: move to config if needed
 // const aliasLength = 6
-// // Я и отправил в config, теперь это
+// // Я отправил в config, теперь это
 // // config.AliasLength
 
 // // вызов другой библиотеки генерации моков
@@ -50,6 +49,12 @@ type Response struct {
 
 type URLSaver interface {
 	SaveURL(urlToSave string, alias string) (int64, error)
+}
+
+func renderJSON(w http.ResponseWriter, v interface{}) error {
+	w.Header().Set("Content-Type", "application/json")
+	encoder := json.NewEncoder(w)
+	return encoder.Encode(v)
 }
 
 func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
@@ -115,14 +120,14 @@ func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 
 			return
 		}
-		if err != nil {
-			log.Error("failed to add url", sl.Err(err))
+		// if err != nil {
+		// 	log.Error("failed to add url", sl.Err(err))
 
-			//ян// все заменить на json
-			render.JSON(w, r, resp.Error("failed to add url"))
+		// 	//ян// все заменить на json
+		// 	render.JSON(w, r, resp.Error("failed to add url"))
 
-			return
-		}
+		// 	return
+		// }
 
 		log.Info("url added", slog.Int64("id", id))
 
@@ -144,6 +149,7 @@ func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 		if err := enc.Encode(jsonResp); err != nil {
 			//здесь будет мой логгер
 			//logger.Log.Debug("error encoding response", zap.Error(err))
+			log.Error("failed to add url", sl.Err(err))
 			return
 		}
 
