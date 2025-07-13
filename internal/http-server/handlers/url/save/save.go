@@ -103,9 +103,9 @@ func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 			alias = random.NewRandomString(config.AliasLength)
 		}
 
-		errUrl := urlSaver.SaveURL(req.URL, alias)
+		errURL := urlSaver.SaveURL(req.URL, alias)
 
-		if errors.Is(errUrl, storage.ErrURLExists) {
+		if errors.Is(errURL, storage.ErrURLExists) {
 			log.Info("url already exists", slog.String("url", req.URL))
 
 			render.JSON(w, r, resp.Error("url already exists"))
