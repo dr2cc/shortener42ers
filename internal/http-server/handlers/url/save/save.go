@@ -137,6 +137,9 @@ func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 		// // Эта конструкция ситуацию не исправляяет. Видимо статус нужно задавать в другом месте
 		// w.Header().Set("Content-Type", "application/json")
 
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusCreated)
+
 		enc := json.NewEncoder(w)
 		if err := enc.Encode(jsonResp); err != nil {
 			//здесь будет мой логгер
