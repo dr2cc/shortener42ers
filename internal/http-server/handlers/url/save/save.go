@@ -112,7 +112,11 @@ func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 			return
 		}
 
-		log.Info("url added", slog.Int64("id", id))
+		// Важен порядок!
+		// После того как вызван w.WriteHeader(http.StatusCreated),
+		// он уже не может записать соответствующий заголовок.
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusCreated)
 
 		jsonResp := Response{
 			Alias: "http://" + r.Host + "/" + alias,
@@ -124,11 +128,7 @@ func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 			return
 		}
 
-		// Важен порядок!
-		// После того как вызван w.WriteHeader(http.StatusCreated),
-		// он уже не может записать соответствующий заголовок.
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusCreated)
+		log.Info("url added", slog.Int64("id", id))
 
 	}
 }
