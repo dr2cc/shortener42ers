@@ -51,12 +51,6 @@ type URLSaver interface {
 	SaveURL(urlToSave string, alias string) (int64, error)
 }
 
-func renderJSON(w http.ResponseWriter, v interface{}) error {
-	w.Header().Set("Content-Type", "application/json")
-	encoder := json.NewEncoder(w)
-	return encoder.Encode(v)
-}
-
 func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "handlers.url.save.New"
@@ -68,7 +62,8 @@ func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 
 		var req Request
 
-		//ян// Нельзя пользоваться render , пробую json
+		//ян// Нельзя пользоваться render для анмаршаллинга ,
+		// использую json
 		body, fail := io.ReadAll(r.Body)
 		if fail != nil {
 			http.Error(w, "Failed to read request body", http.StatusBadRequest)
@@ -80,14 +75,12 @@ func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 		if errors.Is(err, io.EOF) {
 			// отдельно если тело запроса пустое
 			log.Error("request body is empty")
-			//ян// все заменить на json
 			render.JSON(w, r, resp.Error("empty request"))
 
 			return
 		}
 		if err != nil {
 			log.Error("failed to decode request body", sl.Err(err))
-			//ян// все заменить на json
 			render.JSON(w, r, resp.Error("failed to decode request"))
 
 			return
@@ -100,7 +93,6 @@ func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 
 			log.Error("invalid request", sl.Err(err))
 
-			//ян// все заменить на json
 			render.JSON(w, r, resp.ValidationError(validateErr))
 
 			return
@@ -115,43 +107,28 @@ func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 		if errors.Is(err, storage.ErrURLExists) {
 			log.Info("url already exists", slog.String("url", req.URL))
 
-			//ян// все заменить на json
 			render.JSON(w, r, resp.Error("url already exists"))
 
 			return
 		}
-		// if err != nil {
-		// 	log.Error("failed to add url", sl.Err(err))
-
-		// 	//ян// все заменить на json
-		// 	render.JSON(w, r, resp.Error("failed to add url"))
-
-		// 	return
-		// }
 
 		log.Info("url added", slog.Int64("id", id))
 
-		//11.07 Еще не превратил в json !!
 		jsonResp := Response{
 			Alias: "http://" + r.Host + "/" + alias,
 		}
-		// // Устанавливаем статус ответа 201
-		// // После этой установки тип ответа становится text!
-		// // Нам этого не нужно!
-		// w.WriteHeader(http.StatusCreated)
-		// // Эта конструкция ситуацию не исправляяет. Видимо статус нужно задавать в другом месте
-		// w.Header().Set("Content-Type", "application/json")
-
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusCreated)
 
 		enc := json.NewEncoder(w)
 		if err := enc.Encode(jsonResp); err != nil {
-			//здесь будет мой логгер
-			//logger.Log.Debug("error encoding response", zap.Error(err))
 			log.Error("failed to add url", sl.Err(err))
 			return
 		}
+
+		// Важен порядок!
+		// После того как вызван w.WriteHeader(http.StatusCreated),
+		// он уже не может записать соответствующий заголовок.
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusCreated)
 
 	}
 }
