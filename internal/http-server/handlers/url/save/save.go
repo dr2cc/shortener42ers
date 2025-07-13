@@ -48,7 +48,7 @@ type Response struct {
 //go:generate go run github.com/vektra/mockery/v2@v2.28.2 --name=URLSaver
 
 type URLSaver interface {
-	SaveURL(urlToSave string, alias string) (int64, error)
+	SaveURL(urlToSave string, alias string) error
 }
 
 func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
@@ -103,8 +103,9 @@ func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 			alias = random.NewRandomString(config.AliasLength)
 		}
 
-		id, err := urlSaver.SaveURL(req.URL, alias)
-		if errors.Is(err, storage.ErrURLExists) {
+		errUrl := urlSaver.SaveURL(req.URL, alias)
+
+		if errors.Is(errUrl, storage.ErrURLExists) {
 			log.Info("url already exists", slog.String("url", req.URL))
 
 			render.JSON(w, r, resp.Error("url already exists"))
@@ -128,7 +129,7 @@ func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 			return
 		}
 
-		log.Info("url added", slog.Int64("id", id))
+		log.Info("url added", slog.String("alias", alias))
 
 	}
 }

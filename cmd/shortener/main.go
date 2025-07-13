@@ -10,12 +10,12 @@ import (
 	"sh42ers/internal/http-server/handlers/redirect"
 	"sh42ers/internal/http-server/handlers/url/save"
 	savetext "sh42ers/internal/http-server/handlers/url/textsave"
+	mapstorage "sh42ers/internal/storage/map"
 	"syscall"
 	"time"
 
 	myLog "sh42ers/internal/http-server/middleware/logger"
 	"sh42ers/internal/lib/logger/sl"
-	"sh42ers/internal/storage/sqlite"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -63,16 +63,16 @@ func main() {
 	router.Use(myLog.New(log))
 	router.Use(middleware.URLFormat) // парсер URLов поступающих запросов
 
-	// // Примитивное (based on map) хранилище
-	// // С июля 2025 не думаю, что пригодиться, но если вдруг..
-	// // То не забыть реализовать id для логгера
-	// storageInstance := mapstorage.NewURLStorage(make(map[string]string))
+	// Примитивное (based on map) хранилище
+	// С июля 2025 не думаю, что пригодиться, но если вдруг..
+	// Оказалось не так! До unit3 сказали оставаться на map
+	storageInstance := mapstorage.NewURLStorage(make(map[string]string))
 
-	// sqlite.New или "подключает" файл db , а если его нет то создает
-	storageInstance, err := sqlite.New("./storage.db")
-	if err != nil {
-		log.Error("failed to initialize storage", sl.Err(err))
-	}
+	// // sqlite.New или "подключает" файл db , а если его нет то создает
+	// storageInstance, err := sqlite.New("./storage.db")
+	// if err != nil {
+	// 	log.Error("failed to initialize storage", sl.Err(err))
+	// }
 
 	// routers
 	//

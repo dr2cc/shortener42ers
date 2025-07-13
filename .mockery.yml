@@ -13,7 +13,9 @@ require-template-schema-exists: true
 template: testify
 template-schema: '{{.Template}}.schema.json'
 packages:
-# Здесь цель мока. Думаю можно менять в ручную.
+# Здесь цель мока. Думаю можно менять вручную.
   sh42ers/internal/http-server/handlers/url/save:
     config:
       all: true
+# Запускаем коммандой:
+## mockery

@@ -17,10 +17,7 @@ import (
 //go:generate mockgen -source=saveText.go -destination=mocks/mock.go
 type URLtextSaver interface {
 	// // Метод SaveURL реализуется в обоих хранилищах- maps и sqlite
-	// // Но в maps я не делал id (для лога), а в sqlite он уже есть
-	// // История их похожести закончилась
-	//SaveURL(URL, alias string) error
-	SaveURL(urlToSave string, alias string) (int64, error)
+	SaveURL(urlToSave string, alias string) error
 }
 
 func New(log *slog.Logger, urlSaver URLtextSaver) http.HandlerFunc {
@@ -48,14 +45,14 @@ func New(log *slog.Logger, urlSaver URLtextSaver) http.HandlerFunc {
 
 				// Объект urlSaver (переданный при создании хендлера из main)
 				// используется именно тут!
-				id, err := urlSaver.SaveURL(url, alias)
+				err = urlSaver.SaveURL(url, alias)
 				//if urlSaver.SaveURL(url, alias) != nil {
 				if err != nil {
 					fmt.Println("failed to add url")
 					return
 				}
 
-				log.Info("url added", slog.Int64("id", id))
+				log.Info("url added", slog.String("alias", alias))
 
 				// Устанавливаем статус ответа 201
 				w.WriteHeader(http.StatusCreated)

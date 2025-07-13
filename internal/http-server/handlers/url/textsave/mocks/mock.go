@@ -40,12 +40,11 @@ func (m *MockURLtextSaver) EXPECT() *MockURLtextSaverMockRecorder {
 }
 
 // SaveURL mocks base method.
-func (m *MockURLtextSaver) SaveURL(urlToSave, alias string) (int64, error) {
+func (m *MockURLtextSaver) SaveURL(urlToSave, alias string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SaveURL", urlToSave, alias)
-	ret0, _ := ret[0].(int64)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // SaveURL indicates an expected call of SaveURL.

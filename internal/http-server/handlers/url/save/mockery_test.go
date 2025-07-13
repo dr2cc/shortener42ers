@@ -36,29 +36,20 @@ func (_m *MockURLSaver) EXPECT() *MockURLSaver_Expecter {
 }
 
 // SaveURL provides a mock function for the type MockURLSaver
-func (_mock *MockURLSaver) SaveURL(urlToSave string, alias string) (int64, error) {
+func (_mock *MockURLSaver) SaveURL(urlToSave string, alias string) error {
 	ret := _mock.Called(urlToSave, alias)
 
 	if len(ret) == 0 {
 		panic("no return value specified for SaveURL")
 	}
 
-	var r0 int64
-	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(string, string) (int64, error)); ok {
-		return returnFunc(urlToSave, alias)
-	}
-	if returnFunc, ok := ret.Get(0).(func(string, string) int64); ok {
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(string, string) error); ok {
 		r0 = returnFunc(urlToSave, alias)
 	} else {
-		r0 = ret.Get(0).(int64)
+		r0 = ret.Error(0)
 	}
-	if returnFunc, ok := ret.Get(1).(func(string, string) error); ok {
-		r1 = returnFunc(urlToSave, alias)
-	} else {
-		r1 = ret.Error(1)
-	}
-	return r0, r1
+	return r0
 }
 
 // MockURLSaver_SaveURL_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SaveURL'
@@ -91,12 +82,12 @@ func (_c *MockURLSaver_SaveURL_Call) Run(run func(urlToSave string, alias string
 	return _c
 }
 
-func (_c *MockURLSaver_SaveURL_Call) Return(n int64, err error) *MockURLSaver_SaveURL_Call {
-	_c.Call.Return(n, err)
+func (_c *MockURLSaver_SaveURL_Call) Return(err error) *MockURLSaver_SaveURL_Call {
+	_c.Call.Return(err)
 	return _c
 }
 
-func (_c *MockURLSaver_SaveURL_Call) RunAndReturn(run func(urlToSave string, alias string) (int64, error)) *MockURLSaver_SaveURL_Call {
+func (_c *MockURLSaver_SaveURL_Call) RunAndReturn(run func(urlToSave string, alias string) error) *MockURLSaver_SaveURL_Call {
 	_c.Call.Return(run)
 	return _c
 }
