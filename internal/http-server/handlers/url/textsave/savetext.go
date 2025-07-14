@@ -1,6 +1,7 @@
 package savetext
 
 import (
+	"compress/gzip"
 	"fmt"
 	"io"
 	"log/slog"
@@ -20,12 +21,29 @@ type URLtextSaver interface {
 	SaveURL(urlToSave string, alias string) error
 }
 
+// If the request body is gzipped, return a gzip reader, otherwise return the request body (default reader)
+func getGzipReader(r *http.Request) (io.Reader, error) {
+	if r.Header.Get("Content-Encoding") == "gzip" {
+		return gzip.NewReader(r.Body)
+	}
+	return r.Body, nil
+}
+
 func New(log *slog.Logger, urlSaver URLtextSaver) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			contentType := r.Header.Get("Content-Type")
 			if strings.Contains(contentType, "text/plain") {
-				body, err := io.ReadAll(r.Body)
+				//gzip
+				reader, err := getGzipReader(r)
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
+
+				body, err := io.ReadAll(reader)
+				//
+				//body, err := io.ReadAll(r.Body)
 				if err != nil {
 					http.Error(w, "Failed to read request body", http.StatusBadRequest)
 					return

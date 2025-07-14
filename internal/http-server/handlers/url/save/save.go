@@ -1,6 +1,7 @@
 package save
 
 import (
+	"compress/gzip"
 	"encoding/json"
 	"errors"
 	"io"
@@ -51,6 +52,13 @@ type URLSaver interface {
 	SaveURL(urlToSave string, alias string) error
 }
 
+func getGzipReader(r *http.Request) (io.Reader, error) {
+	if r.Header.Get("Content-Encoding") == "gzip" {
+		return gzip.NewReader(r.Body)
+	}
+	return r.Body, nil
+}
+
 func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "handlers.url.save.New"
@@ -64,7 +72,15 @@ func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 
 		//ян// Нельзя пользоваться render для анмаршаллинга ,
 		// использую json
-		body, fail := io.ReadAll(r.Body)
+		//gzip
+		reader, halt := getGzipReader(r)
+		if halt != nil {
+			http.Error(w, halt.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		body, fail := io.ReadAll(reader)
+		//body, fail := io.ReadAll(r.Body)
 		if fail != nil {
 			http.Error(w, "Failed to read request body", http.StatusBadRequest)
 			return
