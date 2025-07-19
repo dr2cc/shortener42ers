@@ -59,6 +59,45 @@ func getGzipReader(r *http.Request) (io.Reader, error) {
 	return r.Body, nil
 }
 
+// func (h *Handler) ShortenAPI(w http.ResponseWriter, r *http.Request) {
+// 	var v models.ShortURL
+
+// 	reader, err := getDecompressedReader(r)
+// 	if err != nil {
+// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+// 		return
+// 	}
+
+// 	if errDecode := json.NewDecoder(reader).Decode(&v); errDecode != nil {
+// 		http.Error(w, "cannot decode json", http.StatusBadRequest)
+// 		return
+// 	}
+
+// 	if v.OriginalURL == "" {
+// 		http.Error(w, "url required", http.StatusBadRequest)
+// 		return
+// 	}
+
+// 	// userID := h.getUserID(r)
+
+// 	// shortURL, err := h.service.Shorten(r.Context(), v.OriginalURL, userID)
+// 	// var notUniqueErr *storage.NotUniqueURLError
+// 	// if errors.As(err, &notUniqueErr) {
+// 	// 	writeShorteningAPIResult(w, h, shortURL, http.StatusConflict)
+// 	// 	return
+// 	// }
+// 	// if err != nil {
+// 	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
+// 	// 	return
+// 	// }
+
+// 	// if err = h.addEncryptedUserIDToCookie(&w, userID); err != nil {
+// 	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
+// 	// }
+
+// 	// writeShorteningAPIResult(w, h, shortURL, http.StatusCreated)
+// }
+
 func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "handlers.url.save.New"
@@ -79,29 +118,37 @@ func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 			return
 		}
 
-		body, fail := io.ReadAll(reader)
-		//body, fail := io.ReadAll(r.Body)
-		if fail != nil {
-			http.Error(w, "Failed to read request body", http.StatusBadRequest)
+		//
+		if errDecode := json.NewDecoder(reader).Decode(&req); errDecode != nil {
+			log.Info("cannot decode json", slog.Any("request", req))
+			http.Error(w, "cannot decode json", http.StatusBadRequest)
 			return
 		}
-		err := json.Unmarshal(body, &req)
-		//*/
-		//err := render.DecodeJSON(r.Body, &req)
-		if errors.Is(err, io.EOF) {
-			// отдельно если тело запроса пустое
-			log.Error("request body is empty")
-			render.JSON(w, r, resp.Error("empty request"))
+		//
 
-			return
-		}
+		// body, fail := io.ReadAll(reader)
+		// //body, fail := io.ReadAll(r.Body)
+		// if fail != nil {
+		// 	http.Error(w, "Failed to read request body", http.StatusBadRequest)
+		// 	return
+		// }
+		// err := json.Unmarshal(body, &req)
+		// //*/
+		// //err := render.DecodeJSON(r.Body, &req)
+		// if errors.Is(err, io.EOF) {
+		// 	// отдельно если тело запроса пустое
+		// 	log.Error("request body is empty")
+		// 	render.JSON(w, r, resp.Error("empty request"))
 
-		if err != nil {
-			log.Error("failed to decode request body", sl.Err(err))
-			render.JSON(w, r, resp.Error("failed to decode request"))
+		// 	return
+		// }
 
-			return
-		}
+		// if err != nil {
+		// 	log.Error("failed to decode request body", sl.Err(err))
+		// 	render.JSON(w, r, resp.Error("failed to decode request"))
+
+		// 	return
+		// }
 
 		log.Info("request body decoded", slog.Any("request", req))
 
