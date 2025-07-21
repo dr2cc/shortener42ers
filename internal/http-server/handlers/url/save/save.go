@@ -4,6 +4,7 @@ import (
 	"compress/gzip"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
@@ -19,11 +20,6 @@ import (
 	"sh42ers/internal/storage"
 )
 
-type Request struct {
-	URL   string `json:"url" validate:"required,url"`
-	Alias string `json:"alias,omitempty"`
-}
-
 type Response struct {
 	// // в iter7 у Яндекса одна строка
 	// // тест сломается!
@@ -31,9 +27,10 @@ type Response struct {
 	Alias string `json:"result,omitempty"` //`json:"alias,omitempty"`
 }
 
-// const aliasLength = 6
-// // Я отправил в config, теперь это
-// // config.AliasLength
+type Request struct {
+	URL   string `json:"url" validate:"required,url"`
+	Alias string `json:"alias,omitempty"`
+}
 
 // // вызов другой библиотеки генерации моков
 //go::generate mockgen -source=save.go -destination=mocks/URLSaver.go
@@ -59,45 +56,6 @@ func getGzipReader(r *http.Request) (io.Reader, error) {
 	return r.Body, nil
 }
 
-// func (h *Handler) ShortenAPI(w http.ResponseWriter, r *http.Request) {
-// 	var v models.ShortURL
-
-// 	reader, err := getDecompressedReader(r)
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
-
-// 	if errDecode := json.NewDecoder(reader).Decode(&v); errDecode != nil {
-// 		http.Error(w, "cannot decode json", http.StatusBadRequest)
-// 		return
-// 	}
-
-// 	if v.OriginalURL == "" {
-// 		http.Error(w, "url required", http.StatusBadRequest)
-// 		return
-// 	}
-
-// 	// userID := h.getUserID(r)
-
-// 	// shortURL, err := h.service.Shorten(r.Context(), v.OriginalURL, userID)
-// 	// var notUniqueErr *storage.NotUniqueURLError
-// 	// if errors.As(err, &notUniqueErr) {
-// 	// 	writeShorteningAPIResult(w, h, shortURL, http.StatusConflict)
-// 	// 	return
-// 	// }
-// 	// if err != nil {
-// 	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
-// 	// 	return
-// 	// }
-
-// 	// if err = h.addEncryptedUserIDToCookie(&w, userID); err != nil {
-// 	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
-// 	// }
-
-// 	// writeShorteningAPIResult(w, h, shortURL, http.StatusCreated)
-// }
-
 func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "handlers.url.save.New"
@@ -109,8 +67,6 @@ func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 
 		var req Request
 
-		//ян// Нельзя пользоваться render для анмаршаллинга ,
-		// использую json
 		//gzip
 		reader, halt := getGzipReader(r)
 		if halt != nil {
@@ -118,37 +74,40 @@ func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 			return
 		}
 
-		//
-		if errDecode := json.NewDecoder(reader).Decode(&req); errDecode != nil {
-			log.Info("cannot decode json", slog.Any("request", req))
-			http.Error(w, "cannot decode json", http.StatusBadRequest)
+		// //
+		// if errDecode := json.NewDecoder(reader).Decode(&req); errDecode != nil {
+		// 	log.Info("cannot decode json", slog.Any("request", req))
+		// 	http.Error(w, "cannot decode json", http.StatusBadRequest)
+		// 	return
+		// }
+		// //
+
+		body, fail := io.ReadAll(reader)
+		//body, fail := io.ReadAll(r.Body)
+		if fail != nil {
+			http.Error(w, "Failed to read request body", http.StatusBadRequest)
 			return
 		}
 		//
+		fmt.Println("body=", string(body))
+		//
+		err := json.Unmarshal(body, &req)
+		//*/
+		//err := render.DecodeJSON(r.Body, &req)
+		if errors.Is(err, io.EOF) {
+			// отдельно если тело запроса пустое
+			log.Error("request body is empty")
+			render.JSON(w, r, resp.Error("empty request"))
 
-		// body, fail := io.ReadAll(reader)
-		// //body, fail := io.ReadAll(r.Body)
-		// if fail != nil {
-		// 	http.Error(w, "Failed to read request body", http.StatusBadRequest)
-		// 	return
-		// }
-		// err := json.Unmarshal(body, &req)
-		// //*/
-		// //err := render.DecodeJSON(r.Body, &req)
-		// if errors.Is(err, io.EOF) {
-		// 	// отдельно если тело запроса пустое
-		// 	log.Error("request body is empty")
-		// 	render.JSON(w, r, resp.Error("empty request"))
+			return
+		}
 
-		// 	return
-		// }
+		if err != nil {
+			log.Error("failed to decode request body", sl.Err(err))
+			render.JSON(w, r, resp.Error("failed to decode request"))
 
-		// if err != nil {
-		// 	log.Error("failed to decode request body", sl.Err(err))
-		// 	render.JSON(w, r, resp.Error("failed to decode request"))
-
-		// 	return
-		// }
+			return
+		}
 
 		log.Info("request body decoded", slog.Any("request", req))
 
