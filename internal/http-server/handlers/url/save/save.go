@@ -4,10 +4,10 @@ import (
 	"compress/gzip"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
+	"strings"
 
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
@@ -49,11 +49,18 @@ type URLSaver interface {
 	SaveURL(urlToSave string, alias string) error
 }
 
-func getGzipReader(r *http.Request) (io.Reader, error) {
-	if r.Header.Get("Content-Encoding") == "gzip" {
-		return gzip.NewReader(r.Body)
+func handlingBody(r *http.Request) ([]byte, error) {
+	contentEncoding := r.Header.Get("Content-Encoding")
+	// проверяем через strings.Contains
+	if !strings.Contains(contentEncoding, "gzip") {
+		return io.ReadAll(r.Body)
 	}
-	return r.Body, nil
+	gz, err := gzip.NewReader(r.Body)
+	if err != nil {
+		return []byte{}, err //обернуть ошибку?
+	}
+	defer gz.Close()
+	return io.ReadAll(gz)
 }
 
 func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
@@ -67,32 +74,15 @@ func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 
 		var req Request
 
-		//gzip
-		reader, halt := getGzipReader(r)
-		if halt != nil {
-			http.Error(w, halt.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		// //
-		// if errDecode := json.NewDecoder(reader).Decode(&req); errDecode != nil {
-		// 	log.Info("cannot decode json", slog.Any("request", req))
-		// 	http.Error(w, "cannot decode json", http.StatusBadRequest)
-		// 	return
-		// }
-		// //
-
-		body, fail := io.ReadAll(reader)
+		// Добавил поддержку gzip, теперь r.Body нужно обрабатывать
+		body, fail := handlingBody(r)
 		//body, fail := io.ReadAll(r.Body)
 		if fail != nil {
 			http.Error(w, "Failed to read request body", http.StatusBadRequest)
 			return
 		}
-		//
-		fmt.Println("body=", string(body))
-		//
+
 		err := json.Unmarshal(body, &req)
-		//*/
 		//err := render.DecodeJSON(r.Body, &req)
 		if errors.Is(err, io.EOF) {
 			// отдельно если тело запроса пустое
