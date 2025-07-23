@@ -116,6 +116,7 @@ func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 			alias = random.NewRandomString(config.AliasLength)
 		}
 
+		// Здесь записываем в "хранилище". Сжимать рано, сжимаем только ответ.
 		errURL := urlSaver.SaveURL(req.URL, alias)
 
 		if errors.Is(errURL, storage.ErrURLExists) {
@@ -126,17 +127,30 @@ func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 			return
 		}
 
-		// Важен порядок!
-		// После того как вызван w.WriteHeader(http.StatusCreated),
-		// он уже не может записать соответствующий заголовок.
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusCreated)
+		// // Ищу "последнюю" точку где может быть записан w.WriteHeader
+		// // Важен порядок!
+		// // После того как вызван w.WriteHeader(http.StatusCreated),
+		// // он уже не может записать соответствующий заголовок.
+		// w.Header().Set("Content-Type", "application/json")
+		// w.WriteHeader(http.StatusCreated)
 
 		jsonResp := Response{
 			Alias: "http://" + r.Host + "/" + alias,
 		}
 
 		enc := json.NewEncoder(w)
+
+		// //
+		// w.Header().Set("Content-Encoding", "gzip")
+		// //
+
+		// Важен порядок!
+		// После того как вызван w.WriteHeader(http.StatusCreated),
+		// он уже не может записать соответствующий заголовок.
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusCreated)
+
+		// Видимо Encode совершает w.WriteHeader ..
 		if err := enc.Encode(jsonResp); err != nil {
 			log.Error("failed to add url", sl.Err(err))
 			return
