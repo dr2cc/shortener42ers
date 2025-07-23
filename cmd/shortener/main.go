@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -11,6 +12,7 @@ import (
 	"sh42ers/internal/http-server/handlers/url/save"
 	savetext "sh42ers/internal/http-server/handlers/url/textsave"
 	mapstorage "sh42ers/internal/storage/map"
+	"strings"
 	"syscall"
 	"time"
 
@@ -36,6 +38,53 @@ const (
 	envProd  = "prod"
 )
 
+func Gzipper(h http.Handler) http.Handler {
+	//return func(w http.ResponseWriter, r *http.Request) {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// // по умолчанию устанавливаем оригинальный http.ResponseWriter как тот,
+		// // который будем передавать следующей функции
+		// ow := w
+
+		// проверяем, что клиент умеет получать от сервера сжатые данные в формате gzip
+		acceptEncoding := r.Header.Get("Accept-Encoding")
+		supportsGzip := strings.Contains(acceptEncoding, "gzip")
+		if supportsGzip {
+			fmt.Println("Supports Gzip!")
+			// // оборачиваем оригинальный http.ResponseWriter новым с поддержкой сжатия
+			// cw := NewCompressWriter(w)
+			// // меняем оригинальный http.ResponseWriter на новый
+			// ow = cw
+			// // не забываем отправить клиенту все сжатые данные после завершения middleware
+			// defer cw.Close()
+		}
+
+		// проверяем, что клиент отправил серверу сжатые данные в формате gzip
+		contentEncoding := r.Header.Get("Content-Encoding")
+		sendsGzip := strings.Contains(contentEncoding, "gzip")
+		if sendsGzip {
+			fmt.Println("Sends Gzip")
+			// // оборачиваем тело запроса в io.Reader с поддержкой декомпрессии
+			// cr, err := NewCompressReader(r.Body)
+			// if err != nil {
+			// 	w.WriteHeader(http.StatusInternalServerError)
+			// 	return
+			// }
+			// // меняем тело запроса на новое
+			// r.Body = cr
+			// defer cr.Close()
+		}
+
+		// // передаём управление хендлеру
+		// h.ServeHTTP(ow, r)
+
+		// Пока мой мидлварь только определяет кто отправляет/ принимает gzip
+		// Но вернуть управление необходимо!
+		h.ServeHTTP(w, r)
+	})
+}
+
+//
+
 func main() {
 	// обрабатываем аргументы командной строки
 	config.ParseFlags()
@@ -58,6 +107,9 @@ func main() {
 
 	router.Use(middleware.RequestID) // трейсинг? (добавлю request_id в каждый запрос)
 	router.Use(middleware.Logger)    // логирование всех запросов
+	// Честный мидлварь! Все три эндпойнта работают!
+	router.Use(Gzipper)
+	//
 	router.Use(middleware.Recoverer) // если внутри произойдет паника, приложение не упадет
 	//меняю логгер на мой
 	router.Use(myLog.New(log))

@@ -140,6 +140,31 @@ func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 
 		enc := json.NewEncoder(w)
 
+		// //**// gzip
+
+		// // // Теперь ответ. Проверяем, что клиент поддерживает gzip
+		// fmt.Println("ACCEPT-Encoding=", r.Header.Get("Accept-Encoding"))
+		// if !strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
+		// 	// Postman не попадает. У него стоит gzip в "ACCEPT-Encoding"
+		// 	// "Верный curl" сюда попадает! Все верно- он не посылает gzip в "ACCEPT-Encoding"
+		// 	fmt.Println("Клиент не поддерживает gzip!")
+
+		// 	// gzip не поддерживается, передаём управление
+		// 	// дальше без изменений
+		// 	w.Header().Set("Content-Type", "application/json")
+		// 	w.WriteHeader(http.StatusCreated)
+
+		// 	// Видимо Encode совершает w.WriteHeader ..
+		// 	if err := enc.Encode(jsonResp); err != nil {
+		// 		log.Error("failed to add url", sl.Err(err))
+		// 		return
+		// 	}
+
+		// 	log.Info("url added", slog.String("alias", alias))
+		// 	//
+		// 	return
+		// }
+
 		// //
 		// w.Header().Set("Content-Encoding", "gzip")
 		// //
