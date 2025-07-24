@@ -1,13 +1,11 @@
 package save
 
 import (
-	"compress/gzip"
 	"encoding/json"
 	"errors"
 	"io"
 	"log/slog"
 	"net/http"
-	"strings"
 
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
@@ -49,19 +47,21 @@ type URLSaver interface {
 	SaveURL(urlToSave string, alias string) error
 }
 
-func handlingBody(r *http.Request) ([]byte, error) {
-	contentEncoding := r.Header.Get("Content-Encoding")
-	// проверяем через strings.Contains
-	if !strings.Contains(contentEncoding, "gzip") {
-		return io.ReadAll(r.Body)
-	}
-	gz, err := gzip.NewReader(r.Body)
-	if err != nil {
-		return []byte{}, err //обернуть ошибку?
-	}
-	defer gz.Close()
-	return io.ReadAll(gz)
-}
+// // ПОЛУЧЕНИЕ сжатых gzip данных
+// // перенес в middleware
+// func handlingBody(r *http.Request) ([]byte, error) {
+// 	contentEncoding := r.Header.Get("Content-Encoding")
+// 	// проверяем через strings.Contains
+// 	if !strings.Contains(contentEncoding, "gzip") {
+// 		return io.ReadAll(r.Body)
+// 	}
+// 	gz, err := gzip.NewReader(r.Body)
+// 	if err != nil {
+// 		return []byte{}, err //обернуть ошибку?
+// 	}
+// 	defer gz.Close()
+// 	return io.ReadAll(gz)
+// }
 
 func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -74,9 +74,11 @@ func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 
 		var req Request
 
-		// Добавил поддержку gzip, теперь r.Body нужно обрабатывать
-		body, fail := handlingBody(r)
-		//body, fail := io.ReadAll(r.Body)
+		// // Добавил поддержку gzip, теперь r.Body нужно обрабатывать
+		// body, fail := handlingBody(r)
+
+		body, fail := io.ReadAll(r.Body)
+
 		if fail != nil {
 			http.Error(w, "Failed to read request body", http.StatusBadRequest)
 			return
@@ -116,7 +118,7 @@ func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 			alias = random.NewRandomString(config.AliasLength)
 		}
 
-		// Здесь записываем в "хранилище". Сжимать рано, сжимаем только ответ.
+		// Здесь записываем в "хранилище"
 		errURL := urlSaver.SaveURL(req.URL, alias)
 
 		if errors.Is(errURL, storage.ErrURLExists) {
@@ -139,35 +141,6 @@ func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 		}
 
 		enc := json.NewEncoder(w)
-
-		// //**// gzip
-
-		// // // Теперь ответ. Проверяем, что клиент поддерживает gzip
-		// fmt.Println("ACCEPT-Encoding=", r.Header.Get("Accept-Encoding"))
-		// if !strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
-		// 	// Postman не попадает. У него стоит gzip в "ACCEPT-Encoding"
-		// 	// "Верный curl" сюда попадает! Все верно- он не посылает gzip в "ACCEPT-Encoding"
-		// 	fmt.Println("Клиент не поддерживает gzip!")
-
-		// 	// gzip не поддерживается, передаём управление
-		// 	// дальше без изменений
-		// 	w.Header().Set("Content-Type", "application/json")
-		// 	w.WriteHeader(http.StatusCreated)
-
-		// 	// Видимо Encode совершает w.WriteHeader ..
-		// 	if err := enc.Encode(jsonResp); err != nil {
-		// 		log.Error("failed to add url", sl.Err(err))
-		// 		return
-		// 	}
-
-		// 	log.Info("url added", slog.String("alias", alias))
-		// 	//
-		// 	return
-		// }
-
-		// //
-		// w.Header().Set("Content-Encoding", "gzip")
-		// //
 
 		// Важен порядок!
 		// После того как вызван w.WriteHeader(http.StatusCreated),
