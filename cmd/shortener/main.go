@@ -72,7 +72,7 @@ func main() {
 
 	// Меняю логгер на мой
 	router.Use(myLog.New(log))
-	// Честный мидлварь! Все три эндпойнта работают!
+	// Работа с gzip
 	router.Use(compress.Gzipper)
 
 	// Парсер URLов поступающих запросов.
