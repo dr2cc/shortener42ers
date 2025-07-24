@@ -106,8 +106,11 @@ func main() {
 
 	// JSON POST эндпоинт
 	// который будет принимать в теле запроса JSON-объект
+	// Можно использовать Use, а можно With . Пока вижу отличия только в синтаксисе
 	router.Route("/api/shorten", func(r chi.Router) {
-		r.With(compress.Gzipper).Post("/", save.New(log, storageInstance))
+		r.Use(compress.Gzipper)
+		r.Post("/", save.New(log, storageInstance))
+		//r.With(compress.Gzipper).Post("/", save.New(log, storageInstance))
 	})
 	// // вариант без middleware для gzip
 	// router.Post("/api/shorten", save.New(log, storageInstance))
@@ -129,7 +132,7 @@ func main() {
 	// // Пример роутера для применения middleware к конкретному роуту в Go с использованием Chi
 	// // Работает так:
 	// // Для применения middleware к конкретному роуту или группе роутов мы используем router.Route().
-	// // Внутри r.Route() мы используем r.Use() для применения middleware (в данном случае compress.Gzipper) к группе роутов, начинающихся с /public
+	// // Внутри router.Route() мы используем r.Use() для применения middleware (в данном случае compress.Gzipper) к группе роутов, начинающихся с /public
 	// //Для применения middleware к конкретному роуту, мы используем r.With(compress.Gzipper).Get("/data", ...) для роута /public/data.
 	// //
 	// router.Route("/public", func(r chi.Router) {
