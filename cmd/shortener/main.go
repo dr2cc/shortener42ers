@@ -66,14 +66,16 @@ func main() {
 	// Логирование всех запросов
 	router.Use(middleware.Logger)
 	// Если внутри произойдет паника, приложение не упадет.
-	// Recoverer это middleware, которое восстанавливается после паники,
+	// Recoverer это compress.Gzipper, которое восстанавливается после паники,
 	// регистрирует панику и выводит идентификатор запроса, если он указан.
 	router.Use(middleware.Recoverer)
 
 	// Меняю логгер на мой
 	router.Use(myLog.New(log))
-	// Работа с gzip
-	router.Use(compress.Gzipper)
+	// // Работа с gzip
+	// // Можно включить, но этот middleware не фильтрует контент по типам и эндпойнтам!
+	// // Применил его к конкретным эндпойнтам
+	// router.Use(compress.Gzipper)
 
 	// Парсер URLов поступающих запросов.
 	// Удалит суффикс из пути маршрутизации и продолжит маршрутизацию
@@ -102,14 +104,39 @@ func main() {
 	// НО! Самое важное- то, что мы передадим параметром должно
 	// реализовывать МЕТОДЫ интерфейса!
 
-	// К iter7 - эндпоинт POST /api/shorten,
+	// JSON POST эндпоинт
 	// который будет принимать в теле запроса JSON-объект
-	router.Post("/api/shorten", save.New(log, storageInstance))
+	router.Route("/api/shorten", func(r chi.Router) {
+		r.With(compress.Gzipper).Post("/", save.New(log, storageInstance))
+	})
+	// // вариант без middleware для gzip
+	// router.Post("/api/shorten", save.New(log, storageInstance))
 
-	// Текстовый POST эндпойнт
-	router.Post("/", savetext.New(log, storageInstance))
-	// Хендлер с методом GET принимает ...
-	router.Get("/{id}", redirect.New(log, storageInstance))
+	// TEXT POST эндпойнт
+	router.Route("/", func(r chi.Router) {
+		r.With(compress.Gzipper).Post("/", savetext.New(log, storageInstance))
+	})
+	// // вариант без middleware для gzip
+	// router.Post("/", savetext.New(log, storageInstance))
+
+	// TEXT GET эндпойнт
+	router.Route("/{id}", func(r chi.Router) {
+		r.With(compress.Gzipper).Get("/", redirect.New(log, storageInstance))
+	})
+	// // вариант без middleware для gzip
+	// router.Get("/{id}", redirect.New(log, storageInstance))
+
+	// // Пример роутера для применения middleware к конкретному роуту в Go с использованием Chi
+	// // Работает так:
+	// // Для применения middleware к конкретному роуту или группе роутов мы используем router.Route().
+	// // Внутри r.Route() мы используем r.Use() для применения middleware (в данном случае compress.Gzipper) к группе роутов, начинающихся с /public
+	// //Для применения middleware к конкретному роуту, мы используем r.With(compress.Gzipper).Get("/data", ...) для роута /public/data.
+	// //
+	// router.Route("/public", func(r chi.Router) {
+	// 	r.With(compress.Gzipper).Get("/data", func(w http.ResponseWriter, r *http.Request) {
+	// 		w.Write([]byte("Public data"))
+	// 	})
+	// })
 
 	// servers
 	//
