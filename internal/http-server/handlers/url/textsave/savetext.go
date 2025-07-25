@@ -45,7 +45,7 @@ func New(log *slog.Logger, urlSaver URLtextSaver) http.HandlerFunc {
 
 				body, err := io.ReadAll(r.Body)
 				if err != nil {
-					http.Error(w, "Failed to read request body", 202) //http.StatusBadRequest)
+					http.Error(w, "Failed to read request body", http.StatusBadRequest)
 					return
 				}
 				defer r.Body.Close()
@@ -81,10 +81,10 @@ func New(log *slog.Logger, urlSaver URLtextSaver) http.HandlerFunc {
 				}
 
 			} else {
-				http.Error(w, "Incorrect Content-Type. Expected text/plain", 203) //http.StatusBadRequest)
+				http.Error(w, "Incorrect Content-Type. Expected text/plain", http.StatusUnauthorized) //http.StatusBadRequest)
 			}
 		} else {
-			http.Error(w, "Method not allowed", 204) //http.StatusBadRequest)
+			http.Error(w, "Method not allowed", http.StatusPaymentRequired) //http.StatusBadRequest)
 		}
 	}
 }
