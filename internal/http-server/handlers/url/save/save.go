@@ -20,7 +20,7 @@ import (
 
 type Response struct {
 	// // в iter7 у Яндекса одна строка
-	// // тест сломается!
+	// // тест сломается?
 	// resp.Response
 	Alias string `json:"result,omitempty"` //`json:"alias,omitempty"`
 }
@@ -33,8 +33,7 @@ type Request struct {
 // // вызов другой библиотеки генерации моков
 //go::generate mockgen -source=save.go -destination=mocks/URLSaver.go
 
-// //не работает. По моему очень капризная или вообще не для windows .
-// // В других проектах буду использовать gomock
+// // так не работает. Очень быстро развивается! Теперь все в конфигурационном файле
 //
 // // docker run -v "$PWD":/src -w /src vektra/mockery:3
 // // On PS: все, бросил, очень запутанная (06.06.2025)
@@ -130,9 +129,6 @@ func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 		}
 
 		// // Ищу "последнюю" точку где может быть записан w.WriteHeader
-		// // Важен порядок!
-		// // После того как вызван w.WriteHeader(http.StatusCreated),
-		// // он уже не может записать соответствующий заголовок.
 		// w.Header().Set("Content-Type", "application/json")
 		// w.WriteHeader(http.StatusCreated)
 
