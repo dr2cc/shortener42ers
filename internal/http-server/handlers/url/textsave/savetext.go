@@ -73,7 +73,7 @@ func New(log *slog.Logger, urlSaver URLtextSaver) http.HandlerFunc {
 
 				// Устанавливаем статус ответа 201
 				w.WriteHeader(http.StatusCreated)
-				//fmt.Fprint(w, config.FlagURL+"/"+alias)
+				// fmt.Fprint(w, config.FlagURL+"/"+alias)
 				if config.FlagURL == "none" {
 					fmt.Fprint(w, "http://"+r.Host+"/"+alias)
 				} else {
@@ -84,7 +84,7 @@ func New(log *slog.Logger, urlSaver URLtextSaver) http.HandlerFunc {
 				http.Error(w, "Incorrect Content-Type. Expected text/plain", http.StatusUnauthorized) //http.StatusBadRequest)
 			}
 		} else {
-			http.Error(w, "Method not allowed", http.StatusPaymentRequired) //http.StatusBadRequest)
+			http.Error(w, "Method not allowed", http.StatusBadRequest)
 		}
 	}
 }
