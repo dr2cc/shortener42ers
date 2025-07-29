@@ -102,11 +102,16 @@ func main() {
 
 	// iter9
 	// файл создал
-	err := filerepo.NewFileRepository("pip.json") //("./cmd/shortener/pip.json")
+	repo, err := filerepo.NewFileRepository("pip.json") //("./cmd/shortener/pip.json")
 	if err != nil {
 		panic(err)
 	}
 	// Организую запись в него
+	// Видимо логично сделать при записе в map !
+	err = repo.Save("shortURL")
+	if err != nil {
+		panic(err)
+	}
 	//
 
 	// // sqlite.New или "подключает" файл db , а если его нет то создает

@@ -2,9 +2,23 @@ package filerepo
 
 import (
 	"bufio"
+	"bytes"
+	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"os"
+	"time"
 )
+
+// ShortURL is main entity for system.
+type ShortURL struct {
+	DeletedAt     time.Time `json:"deleted_at"`     // is used to mark a record as deleted
+	OriginalURL   string    `json:"url"`            // original URL that was shortened
+	ID            string    `json:"id"`             // unique ID of the short URL.
+	CreatedByID   string    `json:"created_by"`     // ID of the user who created the short URL
+	CorrelationID string    `json:"correlation_id"` // CorrelationID is used for matching original and shorten urls in shorten batch operation
+}
 
 // Структура такая. Тип FileRepository и 10 его методов
 
@@ -33,83 +47,90 @@ type FileRepository struct {
 // }
 
 // Для моего проекта
-func NewFileRepository(filePath string) error {
+func NewFileRepository(filePath string) (*FileRepository, error) {
 	fmt.Println("конструктор NewFileRepository")
-	_, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0o777) //nolint:gomnd
+	file, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0o777) //nolint:gomnd
+	if err != nil {
+		return nil, err
+	}
+
+	return &FileRepository{
+		file:   file,
+		writer: bufio.NewWriter(file),
+	}, nil
+}
+
+// ** TEXT POST эндпойнт **///////////////////
+// В оригинальном проекте вызывается из services.shorten , файл shortener.go
+// Save checks if the url is unique and then saving it to the file.
+func (repo *FileRepository) Save(shortURL string) error {
+
+	_, err := repo.GetByID(shortURL)
+	if err == nil {
+		//return NewNotUniqueURLError(shortURL, nil)
+	}
+
+	jsonURL := ShortURL{
+		OriginalURL: "https://google.com/",
+		ID:          shortURL,
+		CreatedByID: "dd308f46-94ca-4d8a-856b-e2ce65999cdb",
+	}
+
+	data, err := json.Marshal(jsonURL)
 	if err != nil {
 		return err
 	}
+
+	// repo.mutex.Lock()
+	// defer repo.mutex.Unlock()
+
+	if _, errWrite := repo.writer.Write(data); errWrite != nil {
+		return errWrite
+	}
+
+	if errWriteByte := repo.writer.WriteByte('\n'); errWriteByte != nil {
+		return errWriteByte
+	}
+
+	if errFlush := repo.writer.Flush(); errFlush != nil {
+		return errFlush
+	}
+
 	return nil
-	//
-	// return &FileRepository{
-	// 	mutex:  sync.RWMutex{},
-	// 	file:   file,
-	// 	writer: bufio.NewWriter(file),
-	// }, nil
 }
 
-// //** TEXT POST эндпойнт **///////////////////
-// // В оригинальном проекте вызывается из services.shorten , файл shortener.go
-// // Save checks if the url is unique and then saving it to the file.
-// func (repo *FileRepository) Save(ctx context.Context, shortURL models.ShortURL) error {
-// 	fmt.Println("метод (типа FileRepository) Save")
-// 	_, err := repo.GetByID(ctx, shortURL.ID)
-// 	if err == nil {
-// 		return NewNotUniqueURLError(shortURL, nil)
-// 	}
+// Строку записывает, но не проверяет уникальность
+// Уникальность потом
+// В начале передать в map, для записи
 
-// 	data, err := json.Marshal(shortURL)
-// 	if err != nil {
-// 		return err
-// 	}
+// GetByID gets url by id.
+// Reads the file line by line and returns url that matches given id.
+func (repo *FileRepository) GetByID(id string) (ShortURL, error) {
+	// repo.mutex.RLock()
+	// defer repo.mutex.RUnlock()
 
-// 	// repo.mutex.Lock()
-// 	// defer repo.mutex.Unlock()
+	if _, err := repo.file.Seek(0, io.SeekStart); err != nil {
+		return ShortURL{}, err
+	}
 
-// 	if _, errWrite := repo.writer.Write(data); errWrite != nil {
-// 		return errWrite
-// 	}
+	var entry ShortURL
 
-// 	if errWriteByte := repo.writer.WriteByte('\n'); errWriteByte != nil {
-// 		return errWriteByte
-// 	}
+	scanner := bufio.NewScanner(repo.file)
 
-// 	if errFlush := repo.writer.Flush(); errFlush != nil {
-// 		return errFlush
-// 	}
+	for scanner.Scan() {
+		line := scanner.Bytes()
+		if err := json.NewDecoder(bytes.NewReader(line)).Decode(&entry); err != nil {
+			return ShortURL{}, err
+		}
+		if entry.ID == id {
+			return entry, nil
+		}
+	}
 
-// 	return nil
-// }
+	return ShortURL{}, errors.New("can't find full url by id")
+}
 
-// // GetByID gets url by id.
-// // Reads the file line by line and returns url that matches given id.
-// func (repo *FileRepository) GetByID(_ context.Context, id string) (models.ShortURL, error) {
-// 	fmt.Println("метод (типа FileRepository) GetByID")
-// 	// repo.mutex.RLock()
-// 	// defer repo.mutex.RUnlock()
-
-// 	if _, err := repo.file.Seek(0, io.SeekStart); err != nil {
-// 		return models.ShortURL{}, err
-// 	}
-
-// 	var entry models.ShortURL
-
-// 	scanner := bufio.NewScanner(repo.file)
-
-// 	for scanner.Scan() {
-// 		line := scanner.Bytes()
-// 		if err := json.NewDecoder(bytes.NewReader(line)).Decode(&entry); err != nil {
-// 			return models.ShortURL{}, err
-// 		}
-// 		if entry.ID == id {
-// 			return entry, nil
-// 		}
-// 	}
-
-// 	return models.ShortURL{}, errors.New("can't find full url by id")
-// }
-
-// //** TEXT POST эндпойнт **///////////////////
+//** TEXT POST эндпойнт **///////////////////
 
 // // SaveBatch saves multiple urls.
 // // Checks if the urls are unique and then saving them.
