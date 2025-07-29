@@ -102,7 +102,7 @@ func main() {
 
 	// iter9
 	// файл создал
-	err := filerepo.NewFileRepository("./cmd/shortener/pip.json")
+	err := filerepo.NewFileRepository("pip.json") //("./cmd/shortener/pip.json")
 	if err != nil {
 		panic(err)
 	}

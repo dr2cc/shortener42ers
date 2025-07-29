@@ -2,14 +2,8 @@ package filerepo
 
 import (
 	"bufio"
-	"bytes"
-	"context"
-	"encoding/json"
-	"errors"
 	"fmt"
-	"io"
 	"os"
-	"sync"
 )
 
 // Структура такая. Тип FileRepository и 10 его методов
@@ -18,7 +12,7 @@ import (
 type FileRepository struct {
 	file   *os.File      // file that we will be writing to
 	writer *bufio.Writer // buffered writer that will write to the file
-	mutex  sync.RWMutex  // mutex that will be used to synchronize access to the file
+	//mutex  sync.RWMutex  // mutex that will be used to synchronize access to the file
 }
 
 // // Оригинальный Конструктор NewFileRepository creates new file repository.
@@ -53,6 +47,69 @@ func NewFileRepository(filePath string) error {
 	// 	writer: bufio.NewWriter(file),
 	// }, nil
 }
+
+// //** TEXT POST эндпойнт **///////////////////
+// // В оригинальном проекте вызывается из services.shorten , файл shortener.go
+// // Save checks if the url is unique and then saving it to the file.
+// func (repo *FileRepository) Save(ctx context.Context, shortURL models.ShortURL) error {
+// 	fmt.Println("метод (типа FileRepository) Save")
+// 	_, err := repo.GetByID(ctx, shortURL.ID)
+// 	if err == nil {
+// 		return NewNotUniqueURLError(shortURL, nil)
+// 	}
+
+// 	data, err := json.Marshal(shortURL)
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	// repo.mutex.Lock()
+// 	// defer repo.mutex.Unlock()
+
+// 	if _, errWrite := repo.writer.Write(data); errWrite != nil {
+// 		return errWrite
+// 	}
+
+// 	if errWriteByte := repo.writer.WriteByte('\n'); errWriteByte != nil {
+// 		return errWriteByte
+// 	}
+
+// 	if errFlush := repo.writer.Flush(); errFlush != nil {
+// 		return errFlush
+// 	}
+
+// 	return nil
+// }
+
+// // GetByID gets url by id.
+// // Reads the file line by line and returns url that matches given id.
+// func (repo *FileRepository) GetByID(_ context.Context, id string) (models.ShortURL, error) {
+// 	fmt.Println("метод (типа FileRepository) GetByID")
+// 	// repo.mutex.RLock()
+// 	// defer repo.mutex.RUnlock()
+
+// 	if _, err := repo.file.Seek(0, io.SeekStart); err != nil {
+// 		return models.ShortURL{}, err
+// 	}
+
+// 	var entry models.ShortURL
+
+// 	scanner := bufio.NewScanner(repo.file)
+
+// 	for scanner.Scan() {
+// 		line := scanner.Bytes()
+// 		if err := json.NewDecoder(bytes.NewReader(line)).Decode(&entry); err != nil {
+// 			return models.ShortURL{}, err
+// 		}
+// 		if entry.ID == id {
+// 			return entry, nil
+// 		}
+// 	}
+
+// 	return models.ShortURL{}, errors.New("can't find full url by id")
+// }
+
+// //** TEXT POST эндпойнт **///////////////////
 
 // // SaveBatch saves multiple urls.
 // // Checks if the urls are unique and then saving them.
@@ -90,66 +147,6 @@ func NewFileRepository(filePath string) error {
 
 // 	return nil
 // }
-
-// В оригинальном проекте вызывается из services.shorten , файл shortener.go
-// Save checks if the url is unique and then saving it to the file.
-func (repo *FileRepository) Save(ctx context.Context, shortURL models.ShortURL) error {
-	fmt.Println("метод (типа FileRepository) Save")
-	_, err := repo.GetByID(ctx, shortURL.ID)
-	if err == nil {
-		return NewNotUniqueURLError(shortURL, nil)
-	}
-
-	data, err := json.Marshal(shortURL)
-	if err != nil {
-		return err
-	}
-
-	repo.mutex.Lock()
-	defer repo.mutex.Unlock()
-
-	if _, errWrite := repo.writer.Write(data); errWrite != nil {
-		return errWrite
-	}
-
-	if errWriteByte := repo.writer.WriteByte('\n'); errWriteByte != nil {
-		return errWriteByte
-	}
-
-	if errFlush := repo.writer.Flush(); errFlush != nil {
-		return errFlush
-	}
-
-	return nil
-}
-
-// GetByID gets url by id.
-// Reads the file line by line and returns url that matches given id.
-func (repo *FileRepository) GetByID(_ context.Context, id string) (models.ShortURL, error) {
-	fmt.Println("метод (типа FileRepository) GetByID")
-	repo.mutex.RLock()
-	defer repo.mutex.RUnlock()
-
-	if _, err := repo.file.Seek(0, io.SeekStart); err != nil {
-		return models.ShortURL{}, err
-	}
-
-	var entry models.ShortURL
-
-	scanner := bufio.NewScanner(repo.file)
-
-	for scanner.Scan() {
-		line := scanner.Bytes()
-		if err := json.NewDecoder(bytes.NewReader(line)).Decode(&entry); err != nil {
-			return models.ShortURL{}, err
-		}
-		if entry.ID == id {
-			return entry, nil
-		}
-	}
-
-	return models.ShortURL{}, errors.New("can't find full url by id")
-}
 
 // // GetUsersUrls reads the file line by line and returning all the urls
 // // that were created by user with id userID.
