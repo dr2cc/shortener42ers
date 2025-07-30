@@ -8,16 +8,15 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"time"
 )
 
 // ShortURL is main entity for system.
 type ShortURL struct {
-	DeletedAt     time.Time `json:"deleted_at"`     // is used to mark a record as deleted
-	OriginalURL   string    `json:"url"`            // original URL that was shortened
-	ID            string    `json:"id"`             // unique ID of the short URL.
-	CreatedByID   string    `json:"created_by"`     // ID of the user who created the short URL
-	CorrelationID string    `json:"correlation_id"` // CorrelationID is used for matching original and shorten urls in shorten batch operation
+	CreatedByID string `json:"uuid"`
+	ID          string `json:"short_url"`
+	OriginalURL string `json:"original_url"`
+	//DeletedAt     time.Time `json:"deleted_at"`     // is used to mark a record as deleted
+	//CorrelationID string    `json:"correlation_id"` // CorrelationID is used for matching original and shorten urls in shorten batch operation
 }
 
 // Структура такая. Тип FileRepository и 10 его методов
@@ -63,7 +62,7 @@ func NewFileRepository(filePath string) (*FileRepository, error) {
 // ** TEXT POST эндпойнт **///////////////////
 // В оригинальном проекте вызывается из services.shorten , файл shortener.go
 // Save checks if the url is unique and then saving it to the file.
-func (repo *FileRepository) Save(shortURL string) error {
+func (repo *FileRepository) Save(URL string, shortURL string) error {
 
 	_, err := repo.GetByID(shortURL)
 	if err == nil {
@@ -71,7 +70,7 @@ func (repo *FileRepository) Save(shortURL string) error {
 	}
 
 	jsonURL := ShortURL{
-		OriginalURL: "https://google.com/",
+		OriginalURL: URL,
 		ID:          shortURL,
 		CreatedByID: "dd308f46-94ca-4d8a-856b-e2ce65999cdb",
 	}
