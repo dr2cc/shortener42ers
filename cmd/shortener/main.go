@@ -10,6 +10,7 @@ import (
 	"sh42ers/internal/http-server/handlers/redirect"
 	"sh42ers/internal/http-server/handlers/url/save"
 	savetext "sh42ers/internal/http-server/handlers/url/textsave"
+	filerepo "sh42ers/internal/storage/file"
 	mapstorage "sh42ers/internal/storage/map"
 	"syscall"
 	"time"
@@ -97,7 +98,20 @@ func main() {
 	// Примитивное (based on map) хранилище
 	// С июля 2025 не думаю, что пригодиться, но если вдруг..
 	// Оказалось не так! До unit3 сказали оставаться на map
-	storageInstance := mapstorage.NewURLStorage(make(map[string]string))
+	mapRepository := make(map[string]string)
+
+	// iter9 Тут создадим мапу из файла
+	repo, err := filerepo.NewFileRepository("pip.json") //("./cmd/shortener/pip.json")
+	if err != nil {
+		panic(err)
+	}
+	err = repo.ReadFileToMap(mapRepository)
+	if err != nil {
+		panic(err)
+	}
+	//
+
+	storageInstance := mapstorage.NewURLStorage(mapRepository) //(make(map[string]string))
 
 	// // sqlite.New или "подключает" файл db , а если его нет то создает
 	// storageInstance, err := sqlite.New("./storage.db")

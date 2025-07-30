@@ -5,8 +5,7 @@ import (
 	filerepo "sh42ers/internal/storage/file"
 )
 
-// тип URLStorage .
-// Покажи нам методы VSCode:
+// тип URLStorage
 type URLStorage struct {
 	Data map[string]string
 }
@@ -23,33 +22,18 @@ func NewURLStorage(d map[string]string) URLStorage {
 	}
 }
 
-// Перед этим NewURLStorage записывал как ниже,
-// новая запись более соответствует "канонам", а значит надежнее при развитии
-// func NewURLStorage() URLStorage {
-// 	return URLStorage{
-// 		Data: make(map[string]string),
-// 	}
-// }
-
-// iter9
-// файл создал
-func createFilerepo() *filerepo.FileRepository {
-	repo, err := filerepo.NewFileRepository("pip.json") //("./cmd/shortener/pip.json")
-	if err != nil {
-		panic(err)
-	}
-	return repo
-}
-
 // метод SaveURL объектов URLStorage
 // реализует интерфейс URLSaver (описан в handlers.go)
 func (s URLStorage) SaveURL(url string, id string) error {
 	s.Data[id] = url
 
-	repo := createFilerepo()
+	//iter9 создаю файл или проверяю, что он существует
+	repo, err := filerepo.NewFileRepository("pip.json") //("./cmd/shortener/pip.json")
+	if err != nil {
+		panic(err)
+	}
 	// Организую запись в него
-	// Видимо логично сделать при записе в map !
-	err := repo.Save(url, id)
+	err = repo.Save(url, id)
 	if err != nil {
 		panic(err)
 	}

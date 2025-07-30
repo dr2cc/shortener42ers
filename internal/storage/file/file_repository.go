@@ -4,10 +4,10 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"os"
+	"strconv"
 )
 
 // ShortURL is main entity for system.
@@ -15,37 +15,19 @@ type ShortURL struct {
 	CreatedByID string `json:"uuid"`
 	ID          string `json:"short_url"`
 	OriginalURL string `json:"original_url"`
-	//DeletedAt     time.Time `json:"deleted_at"`     // is used to mark a record as deleted
-	//CorrelationID string    `json:"correlation_id"` // CorrelationID is used for matching original and shorten urls in shorten batch operation
+	//DeletedAt     time.Time `json:"deleted_at"`
+	//CorrelationID string    `json:"correlation_id"`
 }
-
-// Структура такая. Тип FileRepository и 10 его методов
 
 // FileRepository is repository that uses files for storage.
 type FileRepository struct {
 	file   *os.File      // file that we will be writing to
 	writer *bufio.Writer // buffered writer that will write to the file
+	// // in furure
 	//mutex  sync.RWMutex  // mutex that will be used to synchronize access to the file
 }
 
-// // Оригинальный Конструктор NewFileRepository creates new file repository.
-// // Creates file at filePath if it doesn't exist.
-// // It opens a file, creates a buffered writer, and returns a pointer to a FileRepository.
-// func NewFileRepository(filePath string) (*FileRepository, error) {
-// 	fmt.Println("конструктор NewFileRepository")
-// 	file, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0o777) //nolint:gomnd
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// //
-// 	return &FileRepository{
-// 		mutex:  sync.RWMutex{},
-// 		file:   file,
-// 		writer: bufio.NewWriter(file),
-// 	}, nil
-// }
-
-// Для моего проекта
+// Constructor function (Factory function) NewFileRepository creates a new file repository.
 func NewFileRepository(filePath string) (*FileRepository, error) {
 	fmt.Println("конструктор NewFileRepository")
 	file, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0o777) //nolint:gomnd
@@ -59,27 +41,60 @@ func NewFileRepository(filePath string) (*FileRepository, error) {
 	}, nil
 }
 
-// ** TEXT POST эндпойнт **///////////////////
-// В оригинальном проекте вызывается из services.shorten , файл shortener.go
-// Save checks if the url is unique and then saving it to the file.
-func (repo *FileRepository) Save(URL string, shortURL string) error {
+// Define a method ReadFileToMap for the FileRepository type with a pointer receiver - repo
+// ReadFileToMap reads the file and returns a map of all the urls in the file.
+func (repo *FileRepository) ReadFileToMap(existingURLs map[string]string) error {
+	fmt.Println("метод (типа FileRepository) readFileToMap")
+	if _, err := repo.file.Seek(0, io.SeekStart); err != nil {
+		return err
+	}
+	var entry ShortURL
 
-	_, err := repo.GetByID(shortURL)
-	if err == nil {
-		//return NewNotUniqueURLError(shortURL, nil)
+	scanner := bufio.NewScanner(repo.file)
+
+	for scanner.Scan() {
+		line := scanner.Bytes()
+		if err := json.NewDecoder(bytes.NewReader(line)).Decode(&entry); err != nil {
+			return err
+		}
+		existingURLs[entry.ID] = entry.OriginalURL
+	}
+	return nil
+}
+
+// Save saving URL & shortURL  to the file
+func (repo *FileRepository) Save(URL string, shortURL string) error {
+	// // пока нет задания на уникальность записей,
+	// _, err := repo.GetByID(shortURL)
+	// if err == nil {
+	// 	//return NewNotUniqueURLError(shortURL, nil)
+	// }
+
+	//считаю строки
+	if _, err := repo.file.Seek(0, io.SeekStart); err != nil {
+		return err
 	}
 
-	jsonURL := ShortURL{
+	scanner := bufio.NewScanner(repo.file)
+	count := 1
+
+	for scanner.Scan() {
+		count += 1
+	}
+	//
+
+	jsonUrl := ShortURL{
 		OriginalURL: URL,
 		ID:          shortURL,
-		CreatedByID: "dd308f46-94ca-4d8a-856b-e2ce65999cdb",
+		CreatedByID: strconv.Itoa(count),
 	}
 
-	data, err := json.Marshal(jsonURL)
+	data, err := json.Marshal(jsonUrl)
 	if err != nil {
 		return err
 	}
 
+	// // in furure
 	// repo.mutex.Lock()
 	// defer repo.mutex.Unlock()
 
@@ -98,103 +113,32 @@ func (repo *FileRepository) Save(URL string, shortURL string) error {
 	return nil
 }
 
-// Строку записывает, но не проверяет уникальность
-// Уникальность потом
-// В начале передать в map, для записи
-
-// GetByID gets url by id.
-// Reads the file line by line and returns url that matches given id.
-func (repo *FileRepository) GetByID(id string) (ShortURL, error) {
-	// repo.mutex.RLock()
-	// defer repo.mutex.RUnlock()
-
-	if _, err := repo.file.Seek(0, io.SeekStart); err != nil {
-		return ShortURL{}, err
-	}
-
-	var entry ShortURL
-
-	scanner := bufio.NewScanner(repo.file)
-
-	for scanner.Scan() {
-		line := scanner.Bytes()
-		if err := json.NewDecoder(bytes.NewReader(line)).Decode(&entry); err != nil {
-			return ShortURL{}, err
-		}
-		if entry.ID == id {
-			return entry, nil
-		}
-	}
-
-	return ShortURL{}, errors.New("can't find full url by id")
-}
-
-//** TEXT POST эндпойнт **///////////////////
-
-// // SaveBatch saves multiple urls.
-// // Checks if the urls are unique and then saving them.
-// func (repo *FileRepository) SaveBatch(ctx context.Context, batch []models.ShortURL) error {
-// 	fmt.Println("метод (типа FileRepository) SaveBatch")
-// 	for _, shortURL := range batch {
-// 		_, err := repo.GetByID(ctx, shortURL.ID)
-// 		if err == nil {
-// 			return NewNotUniqueURLError(shortURL, nil)
-// 		}
-// 	}
-
-// 	repo.mutex.Lock()
-// 	defer repo.mutex.Unlock()
-
-// 	for _, shortURL := range batch {
-
-// 		data, err := json.Marshal(shortURL)
-// 		if err != nil {
-// 			return err
-// 		}
-
-// 		if _, errWrite := repo.writer.Write(data); errWrite != nil {
-// 			return errWrite
-// 		}
-
-// 		if errWriteByte := repo.writer.WriteByte('\n'); errWriteByte != nil {
-// 			return err
-// 		}
-
-// 	}
-// 	if err := repo.writer.Flush(); err != nil {
-// 		return err
-// 	}
-
-// 	return nil
-// }
-
-// // GetUsersUrls reads the file line by line and returning all the urls
-// // that were created by user with id userID.
-// func (repo *FileRepository) GetUsersUrls(_ context.Context, userID string) ([]models.ShortURL, error) {
-// 	fmt.Println("метод (типа FileRepository) GetUsersUrls")
-// 	repo.mutex.RLock()
-// 	defer repo.mutex.RUnlock()
+// // GetByID gets url by id.
+// // Reads the file line by line and returns url that matches given id.
+// func (repo *FileRepository) GetByID(id string) (ShortURL, error) {
+// 	// repo.mutex.RLock()
+// 	// defer repo.mutex.RUnlock()
 
 // 	if _, err := repo.file.Seek(0, io.SeekStart); err != nil {
-// 		return nil, err
+// 		return ShortURL{}, err
 // 	}
 
-// 	var entry models.ShortURL
-// 	var URLs []models.ShortURL
+// 	var entry ShortURL
 
 // 	scanner := bufio.NewScanner(repo.file)
 
 // 	for scanner.Scan() {
 // 		line := scanner.Bytes()
 // 		if err := json.NewDecoder(bytes.NewReader(line)).Decode(&entry); err != nil {
-// 			return nil, err
+// 			return ShortURL{}, err
 // 		}
-// 		if entry.CreatedByID == userID {
-// 			URLs = append(URLs, entry)
+
+// 		if entry.ID == id {
+// 			return entry, nil
 // 		}
 // 	}
 
-// 	return URLs, nil
+// 	return ShortURL{}, errors.New("can't find full url by id")
 // }
 
 // // Close closes file.
@@ -208,57 +152,6 @@ func (repo *FileRepository) GetByID(id string) (ShortURL, error) {
 // 	fmt.Println("метод (типа FileRepository) Check")
 // 	_, err := repo.file.Stat()
 // 	return err
-// }
-
-// // DeleteUrls deletes all given urls.
-// func (repo *FileRepository) DeleteUrls(_ context.Context, urls []models.ShortURL) error {
-// 	fmt.Println("метод (типа FileRepository) Delete Urls")
-// 	repo.mutex.Lock()
-// 	defer repo.mutex.Unlock()
-
-// 	existingURLs, err := repo.readFileToMap()
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	// mark deleted urls in memory
-// 	now := time.Now()
-// 	for _, urlToDelete := range urls {
-// 		foundURL, ok := existingURLs[urlToDelete.ID]
-// 		if ok && foundURL.CreatedByID == urlToDelete.CreatedByID {
-// 			foundURL.DeletedAt = now
-// 			existingURLs[urlToDelete.ID] = foundURL
-// 		}
-// 	}
-
-// 	// write back in memory map to file
-// 	err = repo.writeMapToFile(existingURLs)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	return nil
-// }
-
-// // readFileToMap reads the file and returns a map of all the urls in the file.
-// func (repo *FileRepository) readFileToMap() (map[string]models.ShortURL, error) {
-// 	fmt.Println("метод (типа FileRepository) readFileToMap")
-// 	if _, err := repo.file.Seek(0, io.SeekStart); err != nil {
-// 		return nil, err
-// 	}
-// 	var entry models.ShortURL
-// 	existingURLs := make(map[string]models.ShortURL)
-
-// 	scanner := bufio.NewScanner(repo.file)
-
-// 	for scanner.Scan() {
-// 		line := scanner.Bytes()
-// 		if err := json.NewDecoder(bytes.NewReader(line)).Decode(&entry); err != nil {
-// 			return nil, err
-// 		}
-// 		existingURLs[entry.ID] = entry
-// 	}
-// 	return existingURLs, nil
 // }
 
 // // writeMapToFile writes the map to the file.
@@ -291,28 +184,4 @@ func (repo *FileRepository) GetByID(id string) (ShortURL, error) {
 // 		return err
 // 	}
 // 	return nil
-// }
-
-// func (repo *FileRepository) GetUsersAndUrlsCount(_ context.Context) (int, int, error) {
-// 	fmt.Println("метод (типа FileRepository) GetUsersAndUrlsCount")
-// 	if _, err := repo.file.Seek(0, io.SeekStart); err != nil {
-// 		return 0, 0, err
-// 	}
-
-// 	uniqueUsersIds := make(map[string]bool)
-// 	urlsCount := 0
-
-// 	var entry models.ShortURL
-// 	scanner := bufio.NewScanner(repo.file)
-
-// 	for scanner.Scan() {
-// 		line := scanner.Bytes()
-// 		if err := json.NewDecoder(bytes.NewReader(line)).Decode(&entry); err != nil {
-// 			return 0, 0, err
-// 		}
-// 		urlsCount++
-// 		uniqueUsersIds[entry.CreatedByID] = true
-// 	}
-
-// 	return len(uniqueUsersIds), urlsCount, nil
 // }
