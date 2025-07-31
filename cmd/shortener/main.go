@@ -52,7 +52,7 @@ func main() {
 
 	//
 	log := setupLogger(cfg.Env)
-	log = log.With(slog.String("env", cfg.Env)) // к каждому сообщению будет добавляться поле с информацией о текущем окружении
+	//log = log.With(slog.String("env", cfg.Env)) // к каждому сообщению будет добавляться поле с информацией о текущем окружении
 
 	log.Info("init server", slog.String("address", cfg.Address)) // Помимо сообщения выведем параметр с адресом
 	log.Debug("logger debug mode enabled")
@@ -101,7 +101,7 @@ func main() {
 	mapRepository := make(map[string]string)
 
 	// iter9 Тут создадим мапу из файла
-	repo, err := filerepo.NewFileRepository("pip.json") //("./cmd/shortener/pip.json")
+	repo, err := filerepo.NewFileRepository(cfg.FileRepo) //("pip.json") //("./cmd/shortener/pip.json")
 	if err != nil {
 		panic(err)
 	}
@@ -179,6 +179,7 @@ func main() {
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
+	// Server startup parameters:
 	srv := &http.Server{
 		Addr:    cfg.Address,
 		Handler: router,

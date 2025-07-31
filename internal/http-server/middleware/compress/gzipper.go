@@ -2,7 +2,6 @@ package compress
 
 import (
 	"compress/gzip"
-	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -87,7 +86,7 @@ func Gzipper(h http.Handler) http.Handler {
 		acceptEncoding := r.Header.Get("Accept-Encoding")
 		clientGzip := strings.Contains(acceptEncoding, "gzip")
 		if clientGzip {
-			fmt.Println("Supports gzip!")
+			//fmt.Println("Supports gzip!")
 			// оборачиваем http.ResponseWriter в gzipWriter
 			ngw := NewGzipWriter(w)
 			// меняем оригинальный http.ResponseWriter на новый
@@ -100,7 +99,7 @@ func Gzipper(h http.Handler) http.Handler {
 		contentEncoding := r.Header.Get("Content-Encoding")
 		receivedGzip := strings.Contains(contentEncoding, "gzip")
 		if receivedGzip {
-			fmt.Println("Received gzip!")
+			//fmt.Println("Received gzip!")
 			// оборачиваем тело запроса в gzipReader
 			ngr, err := NewGzipReader(r.Body)
 			if err != nil {

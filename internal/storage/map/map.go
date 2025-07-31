@@ -2,6 +2,7 @@ package mapstorage
 
 import (
 	"errors"
+	"sh42ers/internal/config"
 	filerepo "sh42ers/internal/storage/file"
 )
 
@@ -27,8 +28,14 @@ func NewURLStorage(d map[string]string) URLStorage {
 func (s URLStorage) SaveURL(url string, id string) error {
 	s.Data[id] = url
 
-	//iter9 создаю файл или проверяю, что он существует
-	repo, err := filerepo.NewFileRepository("pip.json") //("./cmd/shortener/pip.json")
+	// iter9 создаю файл или проверяю, что он существует
+	// Вроде не совсем правильно.
+	// После запуска сервера файл должен существовать
+	//
+	// Но остается вопрос- как сюда получить экземпляр FileRepository,
+	// как не воспользовавшись NewFileRepository??
+	cfg := config.MustLoad()
+	repo, err := filerepo.NewFileRepository(cfg.FileRepo) //("pip.json") //("./cmd/shortener/pip.json")
 	if err != nil {
 		panic(err)
 	}

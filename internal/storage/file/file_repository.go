@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"os"
 	"strconv"
@@ -29,7 +28,6 @@ type FileRepository struct {
 
 // Constructor function (Factory function) NewFileRepository creates a new file repository.
 func NewFileRepository(filePath string) (*FileRepository, error) {
-	fmt.Println("конструктор NewFileRepository")
 	file, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0o777) //nolint:gomnd
 	if err != nil {
 		return nil, err
@@ -44,7 +42,6 @@ func NewFileRepository(filePath string) (*FileRepository, error) {
 // Define a method ReadFileToMap for the FileRepository type with a pointer receiver - repo
 // ReadFileToMap reads the file and returns a map of all the urls in the file.
 func (repo *FileRepository) ReadFileToMap(existingURLs map[string]string) error {
-	fmt.Println("метод (типа FileRepository) readFileToMap")
 	if _, err := repo.file.Seek(0, io.SeekStart); err != nil {
 		return err
 	}

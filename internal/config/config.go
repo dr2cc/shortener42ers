@@ -14,23 +14,40 @@ var FlagRunAddr string
 // переменная FlagURL отвечает за базовый адрес результирующего сокращённого URL
 var FlagURL string
 
+// переменная FlagFILE отвечает за путь к файлу с адресами и псевдонимами (aliases)
+var FlagFile string
+
 // ParseFlags обрабатывает аргументы командной строки
 // и сохраняет их значения в соответствующих переменных
 func ParseFlags() {
-	// регистрируем переменные
+	// Регистрируем переменные, используемые как флаги.
+	//
+	// ИСПОЛЬЗУЕТСЯ как параметр Addr при запуске сервера:
 	flag.StringVar(&FlagRunAddr, "a", ":8080", "address and port to run server")
+	// Example of using command line flag:
+	// go run .\cmd\shortener\main.go -f kid
+	flag.StringVar(&FlagFile, "f", "pip.json", "file storage path")
+	// Тут передается то, что будет выдвать в ответ (до алиаса) текстовый POST хендлер
+	// в теории должен быть связан с FlagRunAddr
+	// и производиться разбор строки (можно любую ерунду передать)
 	flag.StringVar(&FlagURL, "b", "http://localhost:8080", "host and port")
+
 	// разбираем переданные серверу аргументы коммандной строки в зарегистрированные переменные
 	flag.Parse()
 
-	// Добавляем переменные окружения
+	// Add environment variables (переменные окружения)
 	// $env:SERVER_ADDRESS = "localhost:8089"
+	// $env:FILE_STORAGE_PATH  = "aliases.json"
 	// $env:BASE_URL  = "http://localhost:9999"
+
 	if envRunAddr := os.Getenv("SERVER_ADDRESS"); envRunAddr != "" {
 		FlagRunAddr = envRunAddr
 	}
 	if envURL := os.Getenv("BASE_URL"); envURL != "" {
 		FlagURL = envURL
+	}
+	if envFile := os.Getenv("FILE_STORAGE_PATH"); envFile != "" {
+		FlagFile = envFile
 	}
 }
 
@@ -43,7 +60,9 @@ type Config struct {
 }
 
 type HTTPServer struct {
-	Address     string        `yaml:"address" env-default:"0.0.0.0:8080"`
+	Address string `yaml:"address" env-default:"0.0.0.0:8888"`
+	// iter9
+	FileRepo    string        `yaml:"file_repo" env-default:"pip.json"`
 	Timeout     time.Duration `yaml:"timeout" env-default:"5s"`
 	IdleTimeout time.Duration `yaml:"idle_timeout" env-default:"60s"`
 }
@@ -61,7 +80,8 @@ func MustLoad() *Config {
 		Env:         "local",
 		StoragePath: "./storage.db",
 		HTTPServer: HTTPServer{
-			Address: FlagRunAddr, //"localhost:8080",
+			Address:  FlagRunAddr, //"localhost:8080",
+			FileRepo: FlagFile,
 			//Timeout:     5,
 			//IdleTimeout: 60,
 		},
