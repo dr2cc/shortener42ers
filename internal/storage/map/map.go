@@ -2,13 +2,14 @@ package mapstorage
 
 import (
 	"errors"
-	"sh42ers/internal/config"
 	filerepo "sh42ers/internal/storage/file"
 )
 
 // тип URLStorage
 type URLStorage struct {
 	Data map[string]string
+	// Dependency Injection (DI). iter9
+	FileRepo *filerepo.FileRepository
 }
 
 // конструктор объектов URLStorage
@@ -17,9 +18,10 @@ type URLStorage struct {
 // возвращающие новый экземпляр структуры.
 // По соглашению они записываются как
 // newНазваниеСтруктуры()
-func NewURLStorage(d map[string]string) URLStorage {
+func NewURLStorage(d map[string]string, f *filerepo.FileRepository) URLStorage {
 	return URLStorage{
-		Data: d,
+		Data:     d,
+		FileRepo: f,
 	}
 }
 
@@ -28,19 +30,10 @@ func NewURLStorage(d map[string]string) URLStorage {
 func (s URLStorage) SaveURL(url string, id string) error {
 	s.Data[id] = url
 
-	// iter9 создаю файл или проверяю, что он существует
-	// Вроде не совсем правильно.
-	// После запуска сервера файл должен существовать
-	//
-	// Но остается вопрос- как сюда получить экземпляр FileRepository,
-	// как не воспользовавшись NewFileRepository??
-	cfg := config.MustLoad()
-	repo, err := filerepo.NewFileRepository(cfg.FileRepo) //("pip.json") //("./cmd/shortener/pip.json")
-	if err != nil {
-		panic(err)
-	}
-	// Организую запись в него
-	err = repo.Save(url, id)
+	// iter9
+	// Организую запись в файл
+	err := s.FileRepo.Save(url, id)
+	//err = repo.Save(url, id)
 	if err != nil {
 		panic(err)
 	}
