@@ -11,7 +11,6 @@ import (
 	"github.com/go-chi/render"
 	"github.com/go-playground/validator/v10"
 
-	"sh42ers/internal/config"
 	resp "sh42ers/internal/lib/api/response"
 	"sh42ers/internal/lib/logger/sl"
 	"sh42ers/internal/lib/random"
@@ -29,6 +28,9 @@ type Request struct {
 	URL   string `json:"url" validate:"required,url"`
 	Alias string `json:"alias,omitempty"`
 }
+
+// TODO: move to config if needed
+const aliasLength = 6
 
 // // вызов другой библиотеки генерации моков
 //go::generate mockgen -source=save.go -destination=mocks/URLSaver.go
@@ -114,7 +116,7 @@ func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 
 		alias := req.Alias
 		if alias == "" {
-			alias = random.NewRandomString(config.AliasLength)
+			alias = random.NewRandomString(aliasLength) //(config.AliasLength)
 		}
 
 		// Здесь записываем в "хранилище"

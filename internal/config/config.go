@@ -6,7 +6,9 @@ import (
 	"time"
 )
 
-const AliasLength = 6
+// // Ревьюер первого спринта сказал перенести сюда
+// // а второго вернуть назад в логику хендлеров
+//const AliasLength = 6
 
 // переменная FlagRunAddr содержит адрес и порт для запуска сервера
 var FlagRunAddr string
@@ -16,6 +18,13 @@ var FlagURL string
 
 // переменная FlagFILE отвечает за путь к файлу с адресами и псевдонимами (aliases)
 var FlagFile string
+
+func getEnvOrDefault(envKey, defaultValue string) string {
+	if envValue := os.Getenv(envKey); envValue != "" {
+		return envValue
+	}
+	return defaultValue
+}
 
 // ParseFlags обрабатывает аргументы командной строки
 // и сохраняет их значения в соответствующих переменных
@@ -40,15 +49,19 @@ func ParseFlags() {
 	// $env:FILE_STORAGE_PATH  = "aliases.json"
 	// $env:BASE_URL  = "http://localhost:9999"
 
-	if envRunAddr := os.Getenv("SERVER_ADDRESS"); envRunAddr != "" {
-		FlagRunAddr = envRunAddr
-	}
-	if envURL := os.Getenv("BASE_URL"); envURL != "" {
-		FlagURL = envURL
-	}
-	if envFile := os.Getenv("FILE_STORAGE_PATH"); envFile != "" {
-		FlagFile = envFile
-	}
+	// if envRunAddr := os.Getenv("SERVER_ADDRESS"); envRunAddr != "" {
+	// 	FlagRunAddr = envRunAddr
+	// }
+	// if envURL := os.Getenv("BASE_URL"); envURL != "" {
+	// 	FlagURL = envURL
+	// }
+	// if envFile := os.Getenv("FILE_STORAGE_PATH"); envFile != "" {
+	// 	FlagFile = envFile
+	// }
+
+	FlagRunAddr = getEnvOrDefault("SERVER_ADDRESS", FlagRunAddr)
+	FlagURL = getEnvOrDefault("BASE_URL", FlagURL)
+	FlagFile = getEnvOrDefault("FILE_STORAGE_PATH", FlagFile)
 }
 
 // adv

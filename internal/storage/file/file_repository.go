@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"os"
 	"strconv"
@@ -43,7 +44,7 @@ func NewFileRepository(filePath string) (*FileRepository, error) {
 // ReadFileToMap reads the file and returns a map of all the urls in the file.
 func (repo *FileRepository) ReadFileToMap(existingURLs map[string]string) error {
 	if _, err := repo.file.Seek(0, io.SeekStart); err != nil {
-		return err
+		return fmt.Errorf("error accessing file.Seek %w", err)
 	}
 	var entry ShortURL
 
@@ -52,7 +53,7 @@ func (repo *FileRepository) ReadFileToMap(existingURLs map[string]string) error 
 	for scanner.Scan() {
 		line := scanner.Bytes()
 		if err := json.NewDecoder(bytes.NewReader(line)).Decode(&entry); err != nil {
-			return err
+			return fmt.Errorf("error accessing json.NewDecoder %w", err)
 		}
 		existingURLs[entry.ID] = entry.OriginalURL
 	}
