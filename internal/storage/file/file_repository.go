@@ -83,13 +83,13 @@ func (repo *FileRepository) Save(URL string, shortURL string) error {
 	}
 	//
 
-	jsonUrl := ShortURL{
+	jsonURL := ShortURL{
 		OriginalURL: URL,
 		ID:          shortURL,
 		CreatedByID: strconv.Itoa(count),
 	}
 
-	data, err := json.Marshal(jsonUrl)
+	data, err := json.Marshal(jsonURL)
 	if err != nil {
 		return err
 	}
