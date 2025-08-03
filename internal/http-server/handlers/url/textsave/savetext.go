@@ -9,9 +9,6 @@ import (
 	"sh42ers/internal/lib/random"
 )
 
-// TODO: move to config if needed
-const aliasLength = 6
-
 // // До go generate нужно установить библиотеку
 // // mockery имеет сложную установку, реализовал в POST json ендпойнте
 //
@@ -37,7 +34,7 @@ func New(log *slog.Logger, urlSaver URLtextSaver) http.HandlerFunc {
 
 			// // Генерируем короткий идентификатор и создаем запись в нашем хранилище
 			// //config.FlagURL соответствует "http://" + req.Host если не использовать аргументы
-			alias := random.NewRandomString(aliasLength) //(config.AliasLength)
+			alias := random.NewRandomString() //(config.AliasLength)
 
 			//// ЗДЕСЬ СПОТЫКАЕТСЯ mock на проверке, когда все в порядке.
 			//// "Плохой" метод сюда не заходит!

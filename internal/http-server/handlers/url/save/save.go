@@ -29,9 +29,6 @@ type Request struct {
 	Alias string `json:"alias,omitempty"`
 }
 
-// TODO: move to config if needed
-const aliasLength = 6
-
 // // вызов другой библиотеки генерации моков
 //go::generate mockgen -source=save.go -destination=mocks/URLSaver.go
 
@@ -116,7 +113,7 @@ func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 
 		alias := req.Alias
 		if alias == "" {
-			alias = random.NewRandomString(aliasLength) //(config.AliasLength)
+			alias = random.NewRandomString() //(config.AliasLength)
 		}
 
 		// Здесь записываем в "хранилище"
