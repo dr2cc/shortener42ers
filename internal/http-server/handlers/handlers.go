@@ -1,26 +1,21 @@
 package handlers
 
 import (
-	"context"
 	"log/slog"
-	"net/http"
 	"os"
 	"sh42ers/internal/config"
+	"sh42ers/internal/http-server/handlers/ping"
 	"sh42ers/internal/http-server/handlers/redirect"
 	"sh42ers/internal/http-server/handlers/url/save"
 	"sh42ers/internal/http-server/middleware/compress"
-	"sh42ers/internal/lib/logger/sl"
-	"time"
 
 	savetext "sh42ers/internal/http-server/handlers/url/textsave"
 	myLog "sh42ers/internal/http-server/middleware/logger"
 	filerepo "sh42ers/internal/storage/file"
 	mapstorage "sh42ers/internal/storage/map"
-	"sh42ers/internal/storage/sqlite"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
-	"github.com/jackc/pgx"
 )
 
 const (
@@ -93,12 +88,12 @@ func NewRouter(cfg *config.Config) (*slog.Logger, *chi.Mux) {
 
 	storageInstance := mapstorage.NewURLStorage(mapRepository, repo) //(make(map[string]string))
 
-	// попробую для iter10 ??
-	// sqlite.New или "подключает" файл db , а если его нет то создает
-	storageSql, err := sqlite.New("./storage.db")
-	if err != nil {
-		log.Error("failed to initialize storage", sl.Err(err))
-	}
+	// // попробую для iter10 ?? Но нужен pg...
+	// // sqlite.New или "подключает" файл db , а если его нет то создает
+	// storageSql, err := sqlite.New("./storage.db")
+	// if err != nil {
+	// 	log.Error("failed to initialize storage", sl.Err(err))
+	// }
 
 	// routers
 	//
@@ -142,7 +137,7 @@ func NewRouter(cfg *config.Config) (*slog.Logger, *chi.Mux) {
 	// который при запросе проверяет соединение с базой данных.
 	// При успешной проверке хендлер должен вернуть HTTP-статус 200 OK, при неуспешной — 500 Internal Server Error.
 	//
-	router.Get("/ping", Ping(log, storageSql))
+	router.Get("/ping", ping.Ping)
 
 	// // Пример роутера для применения middleware к конкретному роуту в Go с использованием Chi
 	// // Работает так:
@@ -166,41 +161,6 @@ func NewRouter(cfg *config.Config) (*slog.Logger, *chi.Mux) {
 
 	return log, router
 }
-
-// **//iter10**************************
-// попытался скопировать чужую логику, но тут уже нужно соображать...
-type PgRepository struct {
-	conn *pgx.Conn // connection to the database
-	Dsn  string    // data source name for the Postgres database. It's a string that contains the host, port, username, password, and database name
-}
-
-// Ping is a health check endpoint.
-func Ping(log *slog.Logger, st *sqlite.Storage) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		// в оригинал h.service ЭТО поле
-		// service *services.Shortener  // service that will contain main business logic
-		// структуры Handler
-		err := h.service.HealthCheck(r.Context())
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-	}
-}
-
-// HealthCheck checks if service is working correctly
-func (service *Shortener) HealthCheck(ctx context.Context) error {
-	timeout := 5 * time.Second //nolint:gomnd
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
-	return service.repository.Check(ctx)
-}
-
-// Check checks if the database is up and running.
-func (repo *PgRepository) Check(ctx context.Context) error {
-	return repo.conn.Ping(ctx)
-}
-
-//**//******************************
 
 func setupLogger(env string) *slog.Logger {
 	var log *slog.Logger
