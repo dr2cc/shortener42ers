@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"os"
 	"sh42ers/internal/config"
+	"sh42ers/internal/http-server/handlers/ping"
 	"sh42ers/internal/http-server/handlers/redirect"
 	"sh42ers/internal/http-server/handlers/url/save"
 	"sh42ers/internal/http-server/middleware/compress"
@@ -87,8 +88,9 @@ func NewRouter(cfg *config.Config) (*slog.Logger, *chi.Mux) {
 
 	storageInstance := mapstorage.NewURLStorage(mapRepository, repo) //(make(map[string]string))
 
+	// // попробую для iter10 ?? Но нужен pg...
 	// // sqlite.New или "подключает" файл db , а если его нет то создает
-	// storageInstance, err := sqlite.New("./storage.db")
+	// storageSql, err := sqlite.New("./storage.db")
 	// if err != nil {
 	// 	log.Error("failed to initialize storage", sl.Err(err))
 	// }
@@ -129,6 +131,13 @@ func NewRouter(cfg *config.Config) (*slog.Logger, *chi.Mux) {
 	})
 	// // вариант без middleware для gzip
 	// router.Get("/{id}", redirect.New(log, storageInstance))
+
+	// iter10
+	// Добавьте в сервис хендлер GET /ping,
+	// который при запросе проверяет соединение с базой данных.
+	// При успешной проверке хендлер должен вернуть HTTP-статус 200 OK, при неуспешной — 500 Internal Server Error.
+	//
+	router.Get("/ping", ping.Ping)
 
 	// // Пример роутера для применения middleware к конкретному роуту в Go с использованием Chi
 	// // Работает так:
