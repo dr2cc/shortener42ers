@@ -103,7 +103,9 @@ func NewRouter(cfg *config.Config) (*slog.Logger, *chi.Mux) {
 		log.Error("Failed to connect to DB", "error", err)
 		os.Exit(1)
 	}
-	defer db.Close()
+	// // Здесь defer закрывает соединение очень рано
+	// // или не нужен, или как-то еще
+	//defer db.Close()
 
 	// Creating an app
 	app := &pg.App{DB: db}
@@ -199,3 +201,13 @@ func setupLogger(env string) *slog.Logger {
 
 	return log
 }
+
+//Формат: postgres://user:password@host:port/dbname?sslmode=disable
+//в моем случае:
+//export DATABASE_DSN="postgres://postgres:qwerty@localhost:5436/postgres?sslmode=disable"
+
+//go run .\cmd\shortener\main.go
+//go run ./cmd/shortener/main.go
+
+// Строка запуска pg в docker
+//docker run --name=todo-db -e POSTGRES_PASSWORD=qwerty -p 5436:5432 -d --rm postgres

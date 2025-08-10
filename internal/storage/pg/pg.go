@@ -54,7 +54,7 @@ func (a *App) HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
 
 	// test connect to db
 	if err := a.DB.PingContext(ctx); err != nil {
-		respondWithError(w, http.StatusServiceUnavailable, fmt.Sprintf("Error connecting to DB: %v", err))
+		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("Error connecting to DB: %v", err))
 		return
 	}
 
