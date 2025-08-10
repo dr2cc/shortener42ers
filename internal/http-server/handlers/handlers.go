@@ -4,7 +4,6 @@ import (
 	"log/slog"
 	"os"
 	"sh42ers/internal/config"
-	"sh42ers/internal/http-server/handlers/ping"
 	"sh42ers/internal/http-server/handlers/redirect"
 	"sh42ers/internal/http-server/handlers/url/save"
 	"sh42ers/internal/http-server/middleware/compress"
@@ -13,6 +12,7 @@ import (
 	myLog "sh42ers/internal/http-server/middleware/logger"
 	filerepo "sh42ers/internal/storage/file"
 	mapstorage "sh42ers/internal/storage/map"
+	"sh42ers/internal/storage/pg"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -88,7 +88,27 @@ func NewRouter(cfg *config.Config) (*slog.Logger, *chi.Mux) {
 
 	storageInstance := mapstorage.NewURLStorage(mapRepository, repo) //(make(map[string]string))
 
-	// // попробую для iter10 ?? Но нужен pg...
+	// // iter10
+	// // Подключаю pg
+	// // Getting DSN from environment variables
+	// dsn := os.Getenv("DATABASE_DSN")
+	// if dsn == "" {
+	// 	log.Error("DATABASE_DSN not specified in env")
+	// 	os.Exit(1)
+	// }
+
+	// pg DB init
+	db, err := pg.InitDB(log)
+	if err != nil {
+		log.Error("Failed to connect to DB", "error", err)
+		os.Exit(1)
+	}
+	defer db.Close()
+
+	// Creating an app
+	app := &pg.App{DB: db}
+
+	// // sqlite
 	// // sqlite.New или "подключает" файл db , а если его нет то создает
 	// storageSql, err := sqlite.New("./storage.db")
 	// if err != nil {
@@ -137,7 +157,10 @@ func NewRouter(cfg *config.Config) (*slog.Logger, *chi.Mux) {
 	// который при запросе проверяет соединение с базой данных.
 	// При успешной проверке хендлер должен вернуть HTTP-статус 200 OK, при неуспешной — 500 Internal Server Error.
 	//
-	router.Get("/ping", ping.Ping)
+	router.Get("/ping", app.HealthCheckHandler)
+	// router.Get("/", func(w http.ResponseWriter, r *http.Request) {
+	// 	w.Write([]byte("Welcome!"))
+	// })
 
 	// // Пример роутера для применения middleware к конкретному роуту в Go с использованием Chi
 	// // Работает так:
