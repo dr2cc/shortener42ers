@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"sh42ers/internal/config"
 	"time"
 
 	_ "github.com/lib/pq"
@@ -20,8 +21,11 @@ type App struct {
 
 // Инициализация подключения к PostgreSQL
 func InitDB(log *slog.Logger) (*sql.DB, error) {
+
+	cfg := config.MustLoad()
 	// Getting DSN from environment variables
-	dsn := os.Getenv("DATABASE_DSN")
+	//dsn := os.Getenv("DATABASE_DSN")
+	dsn := cfg.DbDsn
 	if dsn == "" {
 		log.Error("DATABASE_DSN not specified in env")
 		os.Exit(1)

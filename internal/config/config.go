@@ -19,6 +19,9 @@ var FlagURL string
 // переменная FlagFILE отвечает за путь к файлу с адресами и псевдонимами (aliases)
 var FlagFile string
 
+// переменная FlagDsn отвечает за DATABASE_DSN
+var FlagDsn string
+
 func getEnvOrDefault(envKey, defaultValue string) string {
 	if envValue := os.Getenv(envKey); envValue != "" {
 		return envValue
@@ -41,6 +44,7 @@ func ParseFlags() {
 	// и производиться разбор строки (можно любую ерунду передать)
 	flag.StringVar(&FlagURL, "b", "http://localhost:8080", "host and port")
 
+	flag.StringVar(&FlagDsn, "d", "postgres://postgres:qwerty@localhost:5436/postgres?sslmode=disable", "DATABASE DSN")
 	// разбираем переданные серверу аргументы коммандной строки в зарегистрированные переменные
 	flag.Parse()
 
@@ -62,6 +66,7 @@ func ParseFlags() {
 	FlagRunAddr = getEnvOrDefault("SERVER_ADDRESS", FlagRunAddr)
 	FlagURL = getEnvOrDefault("BASE_URL", FlagURL)
 	FlagFile = getEnvOrDefault("FILE_STORAGE_PATH", FlagFile)
+	FlagDsn = getEnvOrDefault("DATABASE_DSN", FlagDsn)
 }
 
 // adv
@@ -75,7 +80,9 @@ type Config struct {
 type HTTPServer struct {
 	Address string `yaml:"address" env-default:"0.0.0.0:8888"`
 	// iter9
-	FileRepo    string        `yaml:"file_repo" env-default:"pip.json"`
+	FileRepo string `yaml:"file_repo" env-default:"pip.json"`
+	// iter10
+	DbDsn       string        `yaml:"db_dsn" env-default:"postgres://postgres:qwerty@localhost:5436/postgres?sslmode=disable"`
 	Timeout     time.Duration `yaml:"timeout" env-default:"5s"`
 	IdleTimeout time.Duration `yaml:"idle_timeout" env-default:"60s"`
 }
@@ -95,6 +102,7 @@ func MustLoad() *Config {
 		HTTPServer: HTTPServer{
 			Address:  FlagRunAddr, //"localhost:8080",
 			FileRepo: FlagFile,
+			DbDsn:    FlagDsn,
 			//Timeout:     5,
 			//IdleTimeout: 60,
 		},
