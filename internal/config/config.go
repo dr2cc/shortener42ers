@@ -82,7 +82,7 @@ type HTTPServer struct {
 	// iter9
 	FileRepo string `yaml:"file_repo" env-default:"pip.json"`
 	// iter10
-	DbDsn       string        `yaml:"db_dsn" env-default:"postgres://postgres:qwerty@localhost:5436/postgres?sslmode=disable"`
+	DBDsn       string        `yaml:"db_dsn" env-default:"postgres://postgres:qwerty@localhost:5436/postgres?sslmode=disable"`
 	Timeout     time.Duration `yaml:"timeout" env-default:"5s"`
 	IdleTimeout time.Duration `yaml:"idle_timeout" env-default:"60s"`
 }
@@ -102,7 +102,7 @@ func MustLoad() *Config {
 		HTTPServer: HTTPServer{
 			Address:  FlagRunAddr, //"localhost:8080",
 			FileRepo: FlagFile,
-			DbDsn:    FlagDsn,
+			DBDsn:    FlagDsn,
 			//Timeout:     5,
 			//IdleTimeout: 60,
 		},

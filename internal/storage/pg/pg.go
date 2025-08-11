@@ -25,7 +25,7 @@ func InitDB(log *slog.Logger) (*sql.DB, error) {
 	cfg := config.MustLoad()
 	// Getting DSN from environment variables
 	//dsn := os.Getenv("DATABASE_DSN")
-	dsn := cfg.DbDsn
+	dsn := cfg.DBDsn
 	if dsn == "" {
 		log.Error("DATABASE_DSN not specified in env")
 		os.Exit(1)
