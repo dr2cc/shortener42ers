@@ -19,6 +19,34 @@ type App struct {
 	DB *sql.DB
 }
 
+// func checkDBAvailability(log *slog.Logger,dsn string) bool {
+// 	db, err := sql.Open("postgres", dsn)
+// 	if err != nil {
+// 		log.Error("DB connection error")
+// 		return false
+// 	}
+// 	//defer db.Close()
+
+// 	// Быстрая проверка соединения
+// 	db.SetMaxOpenConns(1)
+// 	db.SetConnMaxLifetime(time.Second)
+
+// 	// // Настройки пула соединений
+// 	// db.SetMaxOpenConns(25)
+// 	// db.SetMaxIdleConns(25)
+// 	// db.SetConnMaxLifetime(5 * time.Minute)
+
+// 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+// 	defer cancel()
+
+// 	if err := db.PingContext(ctx); err != nil {
+// 		log.Error("DB ping failed")
+// 		return false
+// 	}
+
+// 	return true
+// }
+
 // Инициализация подключения к PostgreSQL
 func InitDB(log *slog.Logger) (*sql.DB, error) {
 
@@ -31,8 +59,12 @@ func InitDB(log *slog.Logger) (*sql.DB, error) {
 		os.Exit(1)
 	}
 
+	//dbAvailable := checkDBAvailability(log,dsn)
+
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
+		// log.Error("DB connection error")
+		// return false
 		return nil, fmt.Errorf("connection error: %v", err)
 	}
 

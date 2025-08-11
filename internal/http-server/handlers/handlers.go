@@ -101,7 +101,7 @@ func NewRouter(cfg *config.Config) (*slog.Logger, *chi.Mux) {
 	db, err := pg.InitDB(log)
 	if err != nil {
 		log.Error("Failed to connect to DB", "error", err)
-		os.Exit(1)
+		//os.Exit(1)
 	}
 	// // Здесь defer закрывает соединение очень рано
 	// // или не нужен, или как-то еще
