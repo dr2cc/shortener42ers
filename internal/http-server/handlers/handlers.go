@@ -12,6 +12,7 @@ import (
 	myLog "sh42ers/internal/http-server/middleware/logger"
 	filerepo "sh42ers/internal/storage/file"
 	mapstorage "sh42ers/internal/storage/map"
+	"sh42ers/internal/storage/pg"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -87,8 +88,31 @@ func NewRouter(cfg *config.Config) (*slog.Logger, *chi.Mux) {
 
 	storageInstance := mapstorage.NewURLStorage(mapRepository, repo) //(make(map[string]string))
 
+	// // iter10
+	// // Подключаю pg
+	// // Getting DSN from environment variables
+	// dsn := os.Getenv("DATABASE_DSN")
+	// if dsn == "" {
+	// 	log.Error("DATABASE_DSN not specified in env")
+	// 	os.Exit(1)
+	// }
+
+	// pg DB init
+	db, err := pg.InitDB(log)
+	if err != nil {
+		log.Error("Failed to connect to DB", "error", err)
+		//os.Exit(1)
+	}
+	// // Здесь defer закрывает соединение очень рано
+	// // или не нужен, или как-то еще
+	//defer db.Close()
+
+	// Creating an app
+	app := &pg.App{DB: db}
+
+	// // sqlite
 	// // sqlite.New или "подключает" файл db , а если его нет то создает
-	// storageInstance, err := sqlite.New("./storage.db")
+	// storageSql, err := sqlite.New("./storage.db")
 	// if err != nil {
 	// 	log.Error("failed to initialize storage", sl.Err(err))
 	// }
@@ -130,6 +154,16 @@ func NewRouter(cfg *config.Config) (*slog.Logger, *chi.Mux) {
 	// // вариант без middleware для gzip
 	// router.Get("/{id}", redirect.New(log, storageInstance))
 
+	// iter10
+	// Добавьте в сервис хендлер GET /ping,
+	// который при запросе проверяет соединение с базой данных.
+	// При успешной проверке хендлер должен вернуть HTTP-статус 200 OK, при неуспешной — 500 Internal Server Error.
+	//
+	router.Get("/ping", app.HealthCheckHandler)
+	// router.Get("/", func(w http.ResponseWriter, r *http.Request) {
+	// 	w.Write([]byte("Welcome!"))
+	// })
+
 	// // Пример роутера для применения middleware к конкретному роуту в Go с использованием Chi
 	// // Работает так:
 	// // Для применения middleware к конкретному роуту или группе роутов мы используем router.Route().
@@ -167,3 +201,13 @@ func setupLogger(env string) *slog.Logger {
 
 	return log
 }
+
+//Формат: postgres://user:password@host:port/dbname?sslmode=disable
+//в моем случае:
+//export DATABASE_DSN="postgres://postgres:qwerty@localhost:5436/postgres?sslmode=disable"
+
+//go run .\cmd\shortener\main.go
+//go run ./cmd/shortener/main.go
+
+// Строка запуска pg в docker
+//docker run --name=todo-db -e POSTGRES_PASSWORD=qwerty -p 5436:5432 -d --rm postgres
