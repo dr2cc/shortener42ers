@@ -1,5 +1,7 @@
 package sqlite
 
+// Вот именно для sqlite нужен специальная приблуда для С#(++)
+// На dell не установлена
 import (
 	"database/sql"
 	"errors"
