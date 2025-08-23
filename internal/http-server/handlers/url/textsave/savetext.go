@@ -10,7 +10,7 @@ import (
 )
 
 // // До go generate нужно установить библиотеку
-// // mockery имеет сложную установку, реализовал в POST json ендпойнте
+// // mockery имеет сложную установку, реализовал в POST json эндпойнте
 //
 //go:generate mockgen -source=saveText.go -destination=mocks/mock.go
 type URLtextSaver interface {
