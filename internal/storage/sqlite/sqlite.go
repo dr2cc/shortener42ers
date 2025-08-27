@@ -1,5 +1,9 @@
 package sqlite
 
+// Вот именно для sqlite нужено включение режима cgo
+// Если cgo включён, можно напрямую исполнять C-код, а результат использовать в Go-коде.
+// https://pkg.go.dev/cmd/cgo
+// На dell не установлена
 import (
 	"database/sql"
 	"errors"
