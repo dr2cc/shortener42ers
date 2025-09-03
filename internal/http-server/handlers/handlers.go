@@ -213,4 +213,4 @@ func setupLogger(env string) *slog.Logger {
 //
 //docker run --rm --name container-pg -e POSTGRES_PASSWORD=qwerty -p 5432:5432 -d  postgres
 //
-//docker run -e POSTGRES_PASSWORD=qwerty -p 5432:5432 -v sprint3:/var/lib/postgresql/data -d  postgres
+//docker run -e POSTGRES_PASSWORD=qwerty -p 5432:5432 -v sprint3:/var/lib/postgresql/data -d postgres
