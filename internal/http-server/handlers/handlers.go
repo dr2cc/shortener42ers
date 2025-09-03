@@ -204,10 +204,13 @@ func setupLogger(env string) *slog.Logger {
 
 //Формат: postgres://user:password@host:port/dbname?sslmode=disable
 //в моем случае:
-//export DATABASE_DSN="postgres://postgres:qwerty@localhost:5436/postgres?sslmode=disable"
+// $env:DATABASE_DSN="postgres://postgres:qwerty@localhost:5432/postgres?sslmode=disable"
 
 //go run .\cmd\shortener\main.go
 //go run ./cmd/shortener/main.go
 
 // Строка запуска pg в docker
-//docker run --name=todo-db -e POSTGRES_PASSWORD=qwerty -p 5436:5432 -d --rm postgres
+//
+//docker run --rm --name container-pg -e POSTGRES_PASSWORD=qwerty -p 5432:5432 -d  postgres
+//
+//docker run -e POSTGRES_PASSWORD=qwerty -p 5432:5432 -v sprint3:/var/lib/postgresql/data -d  postgres

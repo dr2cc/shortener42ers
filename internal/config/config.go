@@ -44,7 +44,7 @@ func ParseFlags() {
 	// и производиться разбор строки (можно любую ерунду передать)
 	flag.StringVar(&FlagURL, "b", "http://localhost:8080", "host and port")
 
-	flag.StringVar(&FlagDsn, "d", "postgres://postgres:qwerty@localhost:5436/postgres?sslmode=disable", "DATABASE DSN")
+	flag.StringVar(&FlagDsn, "d", "postgres://user:password@host:port/dbname?sslmode=disable", "DATABASE DSN") // "postgres://postgres:qwerty@localhost:5436/postgres?sslmode=disable", "DATABASE DSN")
 	// разбираем переданные серверу аргументы коммандной строки в зарегистрированные переменные
 	flag.Parse()
 
@@ -52,6 +52,7 @@ func ParseFlags() {
 	// $env:SERVER_ADDRESS = "localhost:8089"
 	// $env:FILE_STORAGE_PATH  = "aliases.json"
 	// $env:BASE_URL  = "http://localhost:9999"
+	// $env:DATABASE_DSN="postgres://postgres:qwerty@localhost:5432/postgres?sslmode=disable"
 
 	// if envRunAddr := os.Getenv("SERVER_ADDRESS"); envRunAddr != "" {
 	// 	FlagRunAddr = envRunAddr
@@ -91,6 +92,8 @@ func MustLoad() *Config {
 
 	// $env:CONFIG_PATH = "C:\__git\URLsShortener\config\local.yaml"       (на drkk)
 	// $env:CONFIG_PATH = "C:\Mega\__git\URLsShortener\config\local.yaml"  (на ноуте)
+
+	//$env:DATABASE_DSN="postgres://postgres:qwerty@localhost:5432/postgres?sslmode=disable"
 
 	// // Если будут проблемы с переменной окружения, то писать путь так (\ экранируется \\):
 	//configPath := "C:\\__git\\URLsShortener\\config\\local.yaml"
