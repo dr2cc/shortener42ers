@@ -6,9 +6,15 @@ import (
 	"time"
 )
 
+// // Здесь все переменные окружения, по мере их добавления в проект.
+// $env:SERVER_ADDRESS = "localhost:8089"
+// $env:FILE_STORAGE_PATH  = "aliases.json"
+// $env:BASE_URL  = "http://localhost:9999"
+// $env:DATABASE_DSN="postgres://postgres:qwerty@localhost:5432/postgres?sslmode=disable"
+
+//const AliasLength = 6
 // // Ревьюер первого спринта сказал перенести сюда
 // // а второго вернуть назад в логику хендлеров
-//const AliasLength = 6
 
 // переменная FlagRunAddr содержит адрес и порт для запуска сервера
 var FlagRunAddr string
@@ -44,15 +50,11 @@ func ParseFlags() {
 	// и производиться разбор строки (можно любую ерунду передать)
 	flag.StringVar(&FlagURL, "b", "http://localhost:8080", "host and port")
 
-	flag.StringVar(&FlagDsn, "d", "postgres://user:password@host:port/dbname?sslmode=disable", "DATABASE DSN") // "postgres://postgres:qwerty@localhost:5436/postgres?sslmode=disable", "DATABASE DSN")
+	// По условию uter10 DATABASE_DSN получаем или из переменной окружения или задаем поле флага -d
+	// Если изменят, то добавить в параметр value значение DATABASE_DSN
+	flag.StringVar(&FlagDsn, "d", "postgres://user:password@host:port/dbname?sslmode=disable", "db DSN")
 	// разбираем переданные серверу аргументы коммандной строки в зарегистрированные переменные
 	flag.Parse()
-
-	// Add environment variables (переменные окружения)
-	// $env:SERVER_ADDRESS = "localhost:8089"
-	// $env:FILE_STORAGE_PATH  = "aliases.json"
-	// $env:BASE_URL  = "http://localhost:9999"
-	// $env:DATABASE_DSN="postgres://postgres:qwerty@localhost:5432/postgres?sslmode=disable"
 
 	// if envRunAddr := os.Getenv("SERVER_ADDRESS"); envRunAddr != "" {
 	// 	FlagRunAddr = envRunAddr
@@ -88,16 +90,8 @@ type HTTPServer struct {
 	IdleTimeout time.Duration `yaml:"idle_timeout" env-default:"60s"`
 }
 
+// Здесь использование конфигурации в local.yaml и переменная окружения CONFIG_PATH
 func MustLoad() *Config {
-
-	// $env:CONFIG_PATH = "C:\__git\URLsShortener\config\local.yaml"       (на drkk)
-	// $env:CONFIG_PATH = "C:\Mega\__git\URLsShortener\config\local.yaml"  (на ноуте)
-
-	//$env:DATABASE_DSN="postgres://postgres:qwerty@localhost:5432/postgres?sslmode=disable"
-
-	// // Если будут проблемы с переменной окружения, то писать путь так (\ экранируется \\):
-	//configPath := "C:\\__git\\URLsShortener\\config\\local.yaml"
-
 	// ya #start# - заполняем нашу структуру сразу
 	cfg := Config{
 		Env:         "local",
@@ -113,6 +107,14 @@ func MustLoad() *Config {
 	// ya #end#
 
 	// // adv #start#
+	// //Если использую local.yaml , то перед запуском нужно установить переменную окружения CONFIG_PATH
+	// // Переделать на относительный путь!
+	// $env:CONFIG_PATH = "C:\__git\*MyRepository*\config\local.yaml"       (на drkk)
+	// $env:CONFIG_PATH = "C:\Mega\__git\*MyRepository*\config\local.yaml"  (на ноуте)
+
+	// // Если будут проблемы с переменной окружения, то писать путь так (\ экранируется \\):
+	//configPath := "C:\\__git\\*MyRepository*\\config\\local.yaml"
+
 	// // Получаем путь до конфиг-файла из env-переменной CONFIG_PATH
 	// configPath := os.Getenv("CONFIG_PATH")
 	// if configPath == "" {
