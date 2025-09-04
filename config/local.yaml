@@ -7,3 +7,8 @@ http_server: # конфигурация нашего http-сервера
   file_repo: "pip.json"
   timeout: 4s
   idle_timeout: 30s
+
+##Если использую local.yaml , то перед запуском нужно установить переменную окружения CONFIG_PATH
+##Переделать на относительный путь!
+#$env:CONFIG_PATH = "C:\__git\MyRepository\config\local.yaml"       (на drkk)
+#$env:CONFIG_PATH = "C:\Mega\__git\MyRepository\config\local.yaml"  (на ноуте)

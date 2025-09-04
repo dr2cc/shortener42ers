@@ -13,22 +13,13 @@ import (
 	"sh42ers/internal/lib/logger/sl"
 )
 
-// Объявить переменные окружения из iter5 так:
-// $env:SERVER_ADDRESS = "localhost:8089"
-// $env:BASE_URL  = "http://localhost:9999"
-
-// Если использую local.yaml , то перед запуском нужно установить переменную окружения CONFIG_PATH
-//
-// $env:CONFIG_PATH = "C:\__git\adv-url-shortener\config\local.yaml"
-// $env:CONFIG_PATH = "C:\Mega\__git\adv-url-shortener\config\local.yaml"  (на ноуте)
-
-// const (
-// 	envLocal = "local"
-// 	envDev   = "dev"
-// 	envProd  = "prod"
-// )
-
-//
+// //Объявить переменные окружения:
+// // PS
+// $env:SERVER_ADDRESS="localhost:8089"
+// $env:DATABASE_DSN="postgres://postgres:qwerty@localhost:5432/postgres?sslmode=disable"
+// // bash
+// export SERVER_ADDRESS="localhost:8089"
+// export DATABASE_DSN="postgres://postgres:qwerty@localhost:5432/postgres?sslmode=disable"
 
 func main() {
 	// обрабатываем аргументы командной строки
