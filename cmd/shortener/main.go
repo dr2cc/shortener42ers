@@ -13,9 +13,13 @@ import (
 	"sh42ers/internal/lib/logger/sl"
 )
 
-// Объявить переменные окружения:
-// $env:SERVER_ADDRESS = "localhost:8089"
+// //Объявить переменные окружения:
+// // PS
+// $env:SERVER_ADDRESS="localhost:8089"
 // $env:DATABASE_DSN="postgres://postgres:qwerty@localhost:5432/postgres?sslmode=disable"
+// // bash
+// export SERVER_ADDRESS="localhost:8089"
+// export DATABASE_DSN="postgres://postgres:qwerty@localhost:5432/postgres?sslmode=disable"
 
 func main() {
 	// обрабатываем аргументы командной строки

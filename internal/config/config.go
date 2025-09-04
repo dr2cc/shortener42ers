@@ -6,11 +6,21 @@ import (
 	"time"
 )
 
-// // Здесь все переменные окружения, по мере их добавления в проект.
-// $env:SERVER_ADDRESS = "localhost:8089"
-// $env:FILE_STORAGE_PATH  = "aliases.json"
-// $env:BASE_URL  = "http://localhost:9999"
+// // Здесь все переменные окружения, по мере их добавления в проект
+// // PS
+// $env:SERVER_ADDRESS="localhost:8089"
+// $env:="http://localhost:9999"
+// $env:FILE_STORAGE_PATH="aliases.json"
 // $env:DATABASE_DSN="postgres://postgres:qwerty@localhost:5432/postgres?sslmode=disable"
+// // bash
+// export SERVER_ADDRESS="localhost:8089"
+// export BASE_URL="http://localhost:9999"
+// export FILE_STORAGE_PATH="aliases.json"
+// export DATABASE_DSN="postgres://postgres:qwerty@localhost:5432/postgres?sslmode=disable"
+// // все переменные окружения:
+// env
+// // конкретная
+// echo $DATABASE_DSN
 
 //const AliasLength = 6
 // // Ревьюер первого спринта сказал перенести сюда
