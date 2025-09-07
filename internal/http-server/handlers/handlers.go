@@ -89,14 +89,6 @@ func NewRouter(cfg *config.Config) (*slog.Logger, *chi.Mux) {
 	storageInstance := mapstorage.NewURLStorage(mapRepository, repo) //(make(map[string]string))
 
 	// // iter10
-	// // Подключаю pg
-	// // Getting DSN from environment variables
-	// dsn := os.Getenv("DATABASE_DSN")
-	// if dsn == "" {
-	// 	log.Error("DATABASE_DSN not specified in env")
-	// 	os.Exit(1)
-	// }
-
 	// pg DB init
 	db, err := pg.InitDB(log)
 	if err != nil {
@@ -107,15 +99,8 @@ func NewRouter(cfg *config.Config) (*slog.Logger, *chi.Mux) {
 	// // или не нужен, или как-то еще
 	//defer db.Close()
 
-	// Creating an app
-	app := &pg.App{DB: db}
-
-	// // sqlite
-	// // sqlite.New или "подключает" файл db , а если его нет то создает
-	// storageSql, err := sqlite.New("./storage.db")
-	// if err != nil {
-	// 	log.Error("failed to initialize storage", sl.Err(err))
-	// }
+	// // iterXX? Creating an app
+	// app := &pg.App{DB: db}
 
 	// routers
 	//
@@ -159,7 +144,7 @@ func NewRouter(cfg *config.Config) (*slog.Logger, *chi.Mux) {
 	// который при запросе проверяет соединение с базой данных.
 	// При успешной проверке хендлер должен вернуть HTTP-статус 200 OK, при неуспешной — 500 Internal Server Error.
 	//
-	router.Get("/ping", app.HealthCheckHandler)
+	router.Get("/ping", pg.HealthCheckHandler(db)) //app.HealthCheckHandler)
 	// router.Get("/", func(w http.ResponseWriter, r *http.Request) {
 	// 	w.Write([]byte("Welcome!"))
 	// })

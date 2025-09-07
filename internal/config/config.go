@@ -9,7 +9,7 @@ import (
 // // Здесь все переменные окружения, по мере их добавления в проект
 // // PS
 // $env:SERVER_ADDRESS="localhost:8089"
-// $env:="http://localhost:9999"
+// $env:BASE_URL="http://localhost:9999"
 // $env:FILE_STORAGE_PATH="aliases.json"
 // $env:DATABASE_DSN="postgres://postgres:qwerty@localhost:5432/postgres?sslmode=disable"
 // // bash
@@ -95,7 +95,7 @@ type HTTPServer struct {
 	// iter9
 	FileRepo string `yaml:"file_repo" env-default:"pip.json"`
 	// iter10
-	DBDsn       string        `yaml:"db_dsn" env-default:"postgres://postgres:qwerty@localhost:5436/postgres?sslmode=disable"`
+	DSN         string        `yaml:"db_dsn" env-default:"postgres://postgres:qwerty@localhost:5436/postgres?sslmode=disable"`
 	Timeout     time.Duration `yaml:"timeout" env-default:"5s"`
 	IdleTimeout time.Duration `yaml:"idle_timeout" env-default:"60s"`
 }
@@ -109,7 +109,7 @@ func MustLoad() *Config {
 		HTTPServer: HTTPServer{
 			Address:  FlagRunAddr, //"localhost:8080",
 			FileRepo: FlagFile,
-			DBDsn:    FlagDsn,
+			DSN:      FlagDsn,
 			//Timeout:     5,
 			//IdleTimeout: 60,
 		},
