@@ -13,10 +13,12 @@ import (
 	_ "github.com/lib/pq"
 )
 
-// App предоставляет основное приложение
-type App struct {
-	DB *sql.DB
-}
+// // iterXX? App предоставляет основное приложение
+// // Более сложная, но best practice
+// // Вдруг пригодиться..
+// type App struct {
+// 	DB *sql.DB
+// }
 
 // Инициализация подключения к PostgreSQL
 func InitDB(log *slog.Logger) (*sql.DB, error) {
