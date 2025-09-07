@@ -99,6 +99,11 @@ func NewRouter(cfg *config.Config) (*slog.Logger, *chi.Mux) {
 	// // или не нужен, или как-то еще
 	//defer db.Close()
 
+	// iter11
+	// Видимо здесь открываем соединение с
+	// pg.InitDB(log)
+	// а дальше создаем/ проверяем наличие таблицы (как в test)
+
 	// // iterXX? Creating an app
 	// // Более сложная, но best practice
 	// // Вдруг пригодиться..
