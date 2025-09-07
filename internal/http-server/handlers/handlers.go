@@ -100,6 +100,8 @@ func NewRouter(cfg *config.Config) (*slog.Logger, *chi.Mux) {
 	//defer db.Close()
 
 	// // iterXX? Creating an app
+	// // Более сложная, но best practice
+	// // Вдруг пригодиться..
 	// app := &pg.App{DB: db}
 
 	// routers

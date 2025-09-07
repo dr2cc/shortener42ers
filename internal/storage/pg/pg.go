@@ -77,8 +77,8 @@ func HealthCheckHandler(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// // iterXX? Более сложная проверка "здоровья"
-// // Обработчик проверки "здоровья" БД
+// // iterXX? Более сложная, но best practice проверка "здоровья"
+// // Вдруг пригодиться..
 // func (a *App) HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
 // 	ctx := r.Context()
 
