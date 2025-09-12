@@ -12,6 +12,7 @@ import (
 	myLog "sh42ers/internal/http-server/middleware/logger"
 	filerepo "sh42ers/internal/storage/file"
 	mapstorage "sh42ers/internal/storage/map"
+	"sh42ers/internal/storage/pg"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -22,6 +23,16 @@ const (
 	envDev   = "dev"
 	envProd  = "prod"
 )
+
+// // К iter11
+// // создаю таблицу в postgresql
+// query := `
+// 		CREATE TABLE aliases (
+//     	"id" INTEGER PRIMARY KEY,
+//     	"url" TEXT,
+//     	"alias" TEXT
+// 		)
+// 		`
 
 func NewRouter(cfg *config.Config) (*slog.Logger, *chi.Mux) {
 
@@ -87,11 +98,26 @@ func NewRouter(cfg *config.Config) (*slog.Logger, *chi.Mux) {
 
 	storageInstance := mapstorage.NewURLStorage(mapRepository, repo) //(make(map[string]string))
 
-	// // sqlite.New или "подключает" файл db , а если его нет то создает
-	// storageInstance, err := sqlite.New("./storage.db")
-	// if err != nil {
-	// 	log.Error("failed to initialize storage", sl.Err(err))
-	// }
+	// // iter10
+	// pg DB init
+	db, err := pg.InitDB(log)
+	if err != nil {
+		log.Error("Failed to connect to DB", "error", err)
+		//os.Exit(1)
+	}
+	// // Здесь defer закрывает соединение очень рано
+	// // или не нужен, или как-то еще
+	//defer db.Close()
+
+	// iter11
+	// Видимо здесь открываем соединение с
+	// pg.InitDB(log)
+	// а дальше создаем/ проверяем наличие таблицы (как в test)
+
+	// // iterXX? Creating an app
+	// // Более сложная, но best practice
+	// // Вдруг пригодиться..
+	// app := &pg.App{DB: db}
 
 	// routers
 	//
@@ -130,6 +156,16 @@ func NewRouter(cfg *config.Config) (*slog.Logger, *chi.Mux) {
 	// // вариант без middleware для gzip
 	// router.Get("/{id}", redirect.New(log, storageInstance))
 
+	// iter10
+	// Добавьте в сервис хендлер GET /ping,
+	// который при запросе проверяет соединение с базой данных.
+	// При успешной проверке хендлер должен вернуть HTTP-статус 200 OK, при неуспешной — 500 Internal Server Error.
+	//
+	router.Get("/ping", pg.HealthCheckHandler(db)) //app.HealthCheckHandler)
+	// router.Get("/", func(w http.ResponseWriter, r *http.Request) {
+	// 	w.Write([]byte("Welcome!"))
+	// })
+
 	// // Пример роутера для применения middleware к конкретному роуту в Go с использованием Chi
 	// // Работает так:
 	// // Для применения middleware к конкретному роуту или группе роутов мы используем router.Route().
@@ -167,3 +203,16 @@ func setupLogger(env string) *slog.Logger {
 
 	return log
 }
+
+//Формат: postgres://user:password@host:port/dbname?sslmode=disable
+//в моем случае:
+// $env:DATABASE_DSN="postgres://postgres:qwerty@localhost:5432/postgres?sslmode=disable"
+
+//go run .\cmd\shortener\main.go
+//go run ./cmd/shortener/main.go
+
+// Строка запуска pg в docker
+//
+//docker run --rm --name container-pg -e POSTGRES_PASSWORD=qwerty -p 5432:5432 -d  postgres
+//
+//docker run -e POSTGRES_PASSWORD=qwerty -p 5432:5432 -v sprint3:/var/lib/postgresql/data -d postgres
