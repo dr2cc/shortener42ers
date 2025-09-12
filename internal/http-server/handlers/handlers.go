@@ -24,6 +24,16 @@ const (
 	envProd  = "prod"
 )
 
+// // К iter11
+// // создаю таблицу в postgresql
+// query := `
+// 		CREATE TABLE aliases (
+//     	"id" INTEGER PRIMARY KEY,
+//     	"url" TEXT,
+//     	"alias" TEXT
+// 		)
+// 		`
+
 func NewRouter(cfg *config.Config) (*slog.Logger, *chi.Mux) {
 
 	log := setupLogger(cfg.Env)
