@@ -34,8 +34,14 @@ func main() {
 	// // adv #server#
 	// log.Info("starting server", slog.String("address", cfg.Address))
 
+	// Создаю маршрутизатор.
+	// В нем будет:
+	// - логика подключения эндпойнтов
+	// - логика подключения к хралилищам
+	// - логика хранения и получения данных
 	log, router := handlers.NewRouter(cfg)
 
+	// Логика Graceful Shutdown
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
@@ -48,6 +54,7 @@ func main() {
 		//IdleTimeout:  cfg.HTTPServer.IdleTimeout,
 	}
 
+	// Логика web-сервера
 	go func() {
 		if err := srv.ListenAndServe(); err != nil {
 			log.Error("failed to start server")

@@ -1,53 +1,67 @@
 package ping
 
 import (
+	"context"
 	"database/sql"
-	"fmt"
 	"net/http"
 	"time"
-
-	_ "github.com/lib/pq"
+	//_ "github.com/lib/pq"
 )
 
-const (
-	host     = "localhost"
-	port     = 5436
-	user     = "postgres"
-	password = "qwerty"
-	dbname   = "postgres"
-)
+func HealthCheckHandler(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// делаем запрос
+		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+		// не забываем освободить ресурс
+		defer cancel()
 
-func Ping(w http.ResponseWriter, r *http.Request) {
-	// Cтрока подключения
-	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-		host, port, user, password, dbname)
-
-	// Открываем соединение
-	db, err := sql.Open("postgres", psqlInfo)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Ошибка подключения: %v", err), http.StatusInternalServerError)
-		return
+		// В принципе только для целей проверки наличия соединения достаточно db.Ping
+		// но он тоже получает контест, только не явно.
+		// Яндекс советует всюду использовать context
+		// И уже все готово для работы с данными!
+		err := db.PingContext(ctx)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			//fmt.Fprint(w, "Error connecting to the database:", err)
+			return
+		}
+		//w.WriteHeader(http.StatusOK)
+		//fmt.Fprint(w, dn, " - successfully connected to the database!")
+		defer db.Close()
 	}
-	defer db.Close()
-
-	// Устанавливаем таймаут для Ping
-	db.SetConnMaxLifetime(time.Second * 5)
-
-	// Проверяем соединение
-	err = db.Ping()
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Ошибка ping: %v", err), http.StatusInternalServerError)
-		return
-	}
-
-	// Проверяем доступность простым запросом
-	var result int
-	err = db.QueryRow("SELECT 1").Scan(&result)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Ошибка запроса: %v", err), http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	fmt.Fprintf(w, "PostgreSQL доступен! Результат теста: %d", result)
 }
+
+// // iterXX? Более сложная, но best practice проверка "здоровья"
+// // Вдруг пригодиться..
+// func (a *App) HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
+// 	ctx := r.Context()
+
+// 	// test connect to db
+// 	if err := a.DB.PingContext(ctx); err != nil {
+// 		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("Error connecting to DB: %v", err))
+// 		return
+// 	}
+
+// 	// Executing a test query
+// 	var result int
+// 	if err := a.DB.QueryRowContext(ctx, "SELECT 1").Scan(&result); err != nil {
+// 		respondWithError(w, http.StatusServiceUnavailable, fmt.Sprintf("Test request error: %v", err))
+// 		return
+// 	}
+
+// 	respondWithJSON(w, http.StatusOK, map[string]interface{}{
+// 		"status":  "available",
+// 		"message": fmt.Sprintf("The test request returned: %d", result),
+// 	})
+// }
+
+// // Helper (вспомогательные) functions for answers
+// func respondWithError(w http.ResponseWriter, code int, message string) {
+// 	respondWithJSON(w, code, map[string]string{"error": message})
+// }
+
+// func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
+// 	w.Header().Set("Content-Type", "application/json")
+// 	w.WriteHeader(code)
+// 	json.NewEncoder(w).Encode(payload)
+// }

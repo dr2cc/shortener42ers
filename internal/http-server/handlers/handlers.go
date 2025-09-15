@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"os"
 	"sh42ers/internal/config"
+	"sh42ers/internal/http-server/handlers/ping"
 	"sh42ers/internal/http-server/handlers/redirect"
 	"sh42ers/internal/http-server/handlers/url/save"
 	"sh42ers/internal/http-server/middleware/compress"
@@ -23,16 +24,6 @@ const (
 	envDev   = "dev"
 	envProd  = "prod"
 )
-
-// // К iter11
-// // создаю таблицу в postgresql
-// query := `
-// 		CREATE TABLE aliases (
-//     	"id" INTEGER PRIMARY KEY,
-//     	"url" TEXT,
-//     	"alias" TEXT
-// 		)
-// 		`
 
 func NewRouter(cfg *config.Config) (*slog.Logger, *chi.Mux) {
 
@@ -104,15 +95,18 @@ func NewRouter(cfg *config.Config) (*slog.Logger, *chi.Mux) {
 	if err != nil {
 		log.Error("Failed to connect to DB", "error", err)
 		//os.Exit(1)
-	}
-	// // Здесь defer закрывает соединение очень рано
-	// // или не нужен, или как-то еще
-	//defer db.Close()
+	} else {
 
-	// iter11
-	// Видимо здесь открываем соединение с
-	// pg.InitDB(log)
-	// а дальше создаем/ проверяем наличие таблицы (как в test)
+		// iter11
+		// Видимо здесь открываем соединение с
+		// pg.InitDB(log)
+		// а дальше создаем/ проверяем наличие таблицы (как в test)
+		errStorage := pg.New(log, db)
+		if errStorage != nil {
+			log.Error("failed to init storage")
+			os.Exit(1)
+		}
+	}
 
 	// // iterXX? Creating an app
 	// // Более сложная, но best practice
@@ -161,7 +155,7 @@ func NewRouter(cfg *config.Config) (*slog.Logger, *chi.Mux) {
 	// который при запросе проверяет соединение с базой данных.
 	// При успешной проверке хендлер должен вернуть HTTP-статус 200 OK, при неуспешной — 500 Internal Server Error.
 	//
-	router.Get("/ping", pg.HealthCheckHandler(db)) //app.HealthCheckHandler)
+	router.Get("/ping", ping.HealthCheckHandler(db)) //app.HealthCheckHandler)
 	// router.Get("/", func(w http.ResponseWriter, r *http.Request) {
 	// 	w.Write([]byte("Welcome!"))
 	// })
