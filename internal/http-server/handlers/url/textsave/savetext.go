@@ -19,7 +19,7 @@ type URLtextSaver interface {
 	SaveURL(urlToSave string, alias string) error
 }
 
-func NewDb(log *slog.Logger, db *sql.DB) http.HandlerFunc {
+func NewDB(log *slog.Logger, db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 

@@ -143,7 +143,7 @@ func NewRouter(cfg *config.Config) (*slog.Logger, *chi.Mux) {
 	router.Route("/", func(r chi.Router) {
 		if repoDb {
 			// сохраняем в postgresql
-			r.With(compress.Gzipper).Post("/", savetext.NewDb(log, db))
+			r.With(compress.Gzipper).Post("/", savetext.NewDB(log, db))
 		} else {
 			r.With(compress.Gzipper).Post("/", savetext.New(log, storageInstance))
 		}
@@ -156,7 +156,7 @@ func NewRouter(cfg *config.Config) (*slog.Logger, *chi.Mux) {
 	router.Route("/{id}", func(r chi.Router) {
 		if repoDb {
 			// сохраняем в postgresql
-			r.With(compress.Gzipper).Get("/", redirect.NewDb(log, db))
+			r.With(compress.Gzipper).Get("/", redirect.NewDB(log, db))
 		} else {
 			r.With(compress.Gzipper).Get("/", redirect.New(log, storageInstance))
 		}
