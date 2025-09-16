@@ -82,15 +82,5 @@ func New(log *slog.Logger, db *sql.DB) error {
 		panic(err)
 	}
 
-	stmtt, err := db.Prepare("INSERT INTO aliases(alias, url) VALUES($1, $2)")
-	if err != nil {
-		panic(err)
-	}
-
-	_, err = stmtt.Exec("/4JTguyn", "https://habr.com/ru/companies/selectel/articles/747738/")
-	if err != nil {
-		panic(err)
-	}
-
 	return nil
 }

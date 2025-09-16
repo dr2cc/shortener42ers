@@ -6,7 +6,6 @@ import (
 	"sh42ers/internal/config"
 	"sh42ers/internal/http-server/handlers/ping"
 	"sh42ers/internal/http-server/handlers/redirect"
-	"sh42ers/internal/http-server/handlers/url/save"
 	"sh42ers/internal/http-server/middleware/compress"
 
 	savetext "sh42ers/internal/http-server/handlers/url/textsave"
@@ -71,36 +70,39 @@ func NewRouter(cfg *config.Config) (*slog.Logger, *chi.Mux) {
 	// Удалит суффикс из пути маршрутизации и продолжит маршрутизацию
 	router.Use(middleware.URLFormat)
 
-	// Примитивное (based on map) хранилище
-	// С июля 2025 не думаю, что пригодиться, но если вдруг..
-	// Оказалось не так! До unit3 сказали оставаться на map
-	mapRepository := make(map[string]string)
+	repoDb := true
+	var storageInstance mapstorage.URLStorage
 
-	// iter9 Тут создадим мапу из файла
-	repo, err := filerepo.NewFileRepository(cfg.FileRepo) //("pip.json") //("./cmd/shortener/pip.json")
-	if err != nil {
-		panic(err)
-	}
-	err = repo.ReadFileToMap(mapRepository)
-	if err != nil {
-		panic(err)
-	}
-	//
-
-	storageInstance := mapstorage.NewURLStorage(mapRepository, repo) //(make(map[string]string))
-
-	// // iter10
-	// pg DB init
 	db, err := pg.InitDB(log)
 	if err != nil {
 		log.Error("Failed to connect to DB", "error", err)
 		//os.Exit(1)
+		repoDb = false
+		//**********************************************************************************
+		// Блок хранения сокращённых URL в файле и  хранению сокращённых URL в памяти
+
+		// Примитивное (based on map) хранилище
+		mapRepository := make(map[string]string)
+
+		// iter9 Тут создадим мапу из файла
+		repo, err := filerepo.NewFileRepository(cfg.FileRepo) //("pip.json") //("./cmd/shortener/pip.json")
+		if err != nil {
+			log.Error(err.Error())
+		}
+		err = repo.ReadFileToMap(mapRepository)
+		if err != nil {
+			log.Error(err.Error())
+		}
+		//
+
+		storageInstance = mapstorage.NewURLStorage(mapRepository, repo) //(make(map[string]string))
+
+		//*******************************************************************************
+
 	} else {
 
 		// iter11
-		// Видимо здесь открываем соединение с
-		// pg.InitDB(log)
-		// а дальше создаем/ проверяем наличие таблицы (как в test)
+		// создаем/ проверяем наличие таблицы
 		errStorage := pg.New(log, db)
 		if errStorage != nil {
 			log.Error("failed to init storage")
@@ -125,27 +127,39 @@ func NewRouter(cfg *config.Config) (*slog.Logger, *chi.Mux) {
 	// НО! Самое важное- то, что мы передадим параметром должно
 	// реализовывать МЕТОДЫ интерфейса!
 
-	// JSON POST эндпоинт
-	// который будет принимать в теле запроса JSON-объект
-	// Можно использовать Use, а можно With . Пока вижу отличия только в синтаксисе
-	router.Route("/api/shorten", func(r chi.Router) {
-		r.Use(compress.Gzipper)
-		r.Post("/", save.New(log, storageInstance))
-		//r.With(compress.Gzipper).Post("/", save.New(log, storageInstance))
-	})
-	// // вариант без middleware для gzip
-	// router.Post("/api/shorten", save.New(log, storageInstance))
+	// // Переделать для iter11
+	// // JSON POST эндпоинт
+	// // который будет принимать в теле запроса JSON-объект
+	// // Можно использовать Use, а можно With . Пока вижу отличия только в синтаксисе
+	// router.Route("/api/shorten", func(r chi.Router) {
+	// 	r.Use(compress.Gzipper)
+	// 	r.Post("/", save.New(log, storageInstance))
+	// 	//r.With(compress.Gzipper).Post("/", save.New(log, storageInstance))
+	// })
+	// // // вариант без middleware для gzip
+	// // router.Post("/api/shorten", save.New(log, storageInstance))
 
 	// TEXT POST эндпойнт
 	router.Route("/", func(r chi.Router) {
-		r.With(compress.Gzipper).Post("/", savetext.New(log, storageInstance))
+		if repoDb {
+			// сохраняем в postgresql
+			r.With(compress.Gzipper).Post("/", savetext.NewDb(log, db))
+		} else {
+			r.With(compress.Gzipper).Post("/", savetext.New(log, storageInstance))
+		}
+
 	})
 	// // вариант без middleware для gzip
 	// router.Post("/", savetext.New(log, storageInstance))
 
 	// TEXT GET эндпойнт
 	router.Route("/{id}", func(r chi.Router) {
-		r.With(compress.Gzipper).Get("/", redirect.New(log, storageInstance))
+		if repoDb {
+			// сохраняем в postgresql
+			r.With(compress.Gzipper).Get("/", redirect.NewDb(log, db))
+		} else {
+			r.With(compress.Gzipper).Get("/", redirect.New(log, storageInstance))
+		}
 	})
 	// // вариант без middleware для gzip
 	// router.Get("/{id}", redirect.New(log, storageInstance))
