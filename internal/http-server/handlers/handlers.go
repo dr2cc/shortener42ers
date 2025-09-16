@@ -70,14 +70,14 @@ func NewRouter(cfg *config.Config) (*slog.Logger, *chi.Mux) {
 	// Удалит суффикс из пути маршрутизации и продолжит маршрутизацию
 	router.Use(middleware.URLFormat)
 
-	repoDb := true
+	repoDB := true
 	var storageInstance mapstorage.URLStorage
 
 	db, err := pg.InitDB(log)
 	if err != nil {
 		log.Error("Failed to connect to DB", "error", err)
 		//os.Exit(1)
-		repoDb = false
+		repoDB = false
 		//**********************************************************************************
 		// Блок хранения сокращённых URL в файле и  хранению сокращённых URL в памяти
 
@@ -141,7 +141,7 @@ func NewRouter(cfg *config.Config) (*slog.Logger, *chi.Mux) {
 
 	// TEXT POST эндпойнт
 	router.Route("/", func(r chi.Router) {
-		if repoDb {
+		if repoDB {
 			// сохраняем в postgresql
 			r.With(compress.Gzipper).Post("/", savetext.NewDB(log, db))
 		} else {
@@ -154,7 +154,7 @@ func NewRouter(cfg *config.Config) (*slog.Logger, *chi.Mux) {
 
 	// TEXT GET эндпойнт
 	router.Route("/{id}", func(r chi.Router) {
-		if repoDb {
+		if repoDB {
 			// сохраняем в postgresql
 			r.With(compress.Gzipper).Get("/", redirect.NewDB(log, db))
 		} else {

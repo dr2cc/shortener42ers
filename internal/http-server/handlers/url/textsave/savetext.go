@@ -42,17 +42,14 @@ func NewDB(log *slog.Logger, db *sql.DB) http.HandlerFunc {
 			// err = urlSaver.SaveURL(url, alias)
 
 			stmt, err := db.Prepare("INSERT INTO aliases(alias, url) VALUES($1, $2)")
-			// if err != nil {
-			// 	panic(err)
-			// }
+			if err != nil {
+				log.Error(err.Error())
+			}
 
 			_, err = stmt.Exec(alias, url)
-			// if err != nil {
-			// 	panic(err)
-			// }
 
 			if err != nil {
-				fmt.Println("failed to add url")
+				log.Error(err.Error())
 				return
 			}
 
