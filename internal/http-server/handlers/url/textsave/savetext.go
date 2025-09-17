@@ -96,7 +96,7 @@ func New(log *slog.Logger, urlSaver URLtextSaver) http.HandlerFunc {
 			err = urlSaver.SaveURL(url, alias)
 			//if urlSaver.SaveURL(url, alias) != nil {
 			if err != nil {
-				fmt.Println("failed to add url")
+				log.Error("failed to add url")
 				return
 			}
 

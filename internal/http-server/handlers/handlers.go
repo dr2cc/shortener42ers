@@ -8,6 +8,7 @@ import (
 	"sh42ers/internal/http-server/handlers/redirect"
 	"sh42ers/internal/http-server/middleware/compress"
 
+	"sh42ers/internal/http-server/handlers/url/save"
 	savetext "sh42ers/internal/http-server/handlers/url/textsave"
 	myLog "sh42ers/internal/http-server/middleware/logger"
 	filerepo "sh42ers/internal/storage/file"
@@ -73,6 +74,11 @@ func NewRouter(cfg *config.Config) (*slog.Logger, *chi.Mux) {
 	repoDB := true
 	var storageInstance mapstorage.URLStorage
 
+	// // Логично сделать так. Тогда не нужно переделывать под реализацию
+	// // и моки будут работать.
+	// // Сейчас ругается TEXT GET эндпойнт
+	// var storageInstance save.URLSaver
+
 	db, err := pg.InitDB(log)
 	if err != nil {
 		log.Error("Failed to connect to DB", "error", err)
@@ -127,17 +133,23 @@ func NewRouter(cfg *config.Config) (*slog.Logger, *chi.Mux) {
 	// НО! Самое важное- то, что мы передадим параметром должно
 	// реализовывать МЕТОДЫ интерфейса!
 
-	// // Переделать для iter11
-	// // JSON POST эндпоинт
-	// // который будет принимать в теле запроса JSON-объект
-	// // Можно использовать Use, а можно With . Пока вижу отличия только в синтаксисе
-	// router.Route("/api/shorten", func(r chi.Router) {
-	// 	r.Use(compress.Gzipper)
-	// 	r.Post("/", save.New(log, storageInstance))
-	// 	//r.With(compress.Gzipper).Post("/", save.New(log, storageInstance))
-	// })
-	// // // вариант без middleware для gzip
-	// // router.Post("/api/shorten", save.New(log, storageInstance))
+	// Переделать для iter11
+	// JSON POST эндпоинт
+	// который будет принимать в теле запроса JSON-объект
+	// Можно использовать Use, а можно With . Пока вижу отличия только в синтаксисе
+	router.Route("/api/shorten", func(r chi.Router) {
+		r.Use(compress.Gzipper)
+		// //Надеюсь эта конструкция с 18.09.2025 не понадобится!
+		// if repoDB {
+		// 	r.Post("/", save.New(log, storageInstance))
+		// } else {
+		r.Post("/", save.New(log, storageInstance))
+		//r.With(compress.Gzipper).Post("/", save.New(log, storageInstance))
+		//}
+
+	})
+	// // вариант без middleware для gzip
+	// router.Post("/api/shorten", save.New(log, storageInstance))
 
 	// TEXT POST эндпойнт
 	router.Route("/", func(r chi.Router) {

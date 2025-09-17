@@ -44,7 +44,7 @@ func New(storagePath string) (*Storage, error) {
 	return &Storage{db: db}, nil
 }
 
-// метод SaveURL типа *Storage , реализует интерфейс URLSaver
+// метод SaveURL типа *Storage , реализует интерфейс URLSaver (описан в handlers.go)
 func (s *Storage) SaveURL(urlToSave string, alias string) (int64, error) {
 	const op = "storage.sqlite.SaveURL"
 
