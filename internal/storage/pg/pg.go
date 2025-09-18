@@ -19,8 +19,12 @@ import (
 // 	DB *sql.DB
 // }
 
+type Storage struct {
+	DB *sql.DB
+}
+
 // Инициализация подключения к PostgreSQL
-func InitDB(log *slog.Logger) (*sql.DB, error) {
+func InitDB(log *slog.Logger) (*Storage, error) {
 
 	cfg := config.MustLoad()
 	// Getting DSN from environment variables
@@ -56,7 +60,7 @@ func InitDB(log *slog.Logger) (*sql.DB, error) {
 		return nil, fmt.Errorf("error to ping: %v", err)
 	}
 
-	return db, nil
+	return &Storage{DB: db}, nil
 }
 
 func New(log *slog.Logger, db *sql.DB) error {

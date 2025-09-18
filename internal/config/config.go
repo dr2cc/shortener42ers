@@ -12,6 +12,7 @@ import (
 // $env:BASE_URL="http://localhost:9999"
 // $env:FILE_STORAGE_PATH="aliases.json"
 // $env:DATABASE_DSN="postgres://postgres:qwerty@localhost:5432/postgres?sslmode=disable"
+
 // // bash
 // export SERVER_ADDRESS="localhost:8089"
 // export BASE_URL="http://localhost:9999"

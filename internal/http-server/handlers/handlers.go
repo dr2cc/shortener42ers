@@ -109,7 +109,7 @@ func NewRouter(cfg *config.Config) (*slog.Logger, *chi.Mux) {
 
 		// iter11
 		// создаем/ проверяем наличие таблицы
-		errStorage := pg.New(log, db)
+		errStorage := pg.New(log, db.DB)
 		if errStorage != nil {
 			log.Error("failed to init storage")
 			os.Exit(1)
@@ -155,7 +155,7 @@ func NewRouter(cfg *config.Config) (*slog.Logger, *chi.Mux) {
 	router.Route("/", func(r chi.Router) {
 		if repoDB {
 			// сохраняем в postgresql
-			r.With(compress.Gzipper).Post("/", savetext.NewDB(log, db))
+			r.With(compress.Gzipper).Post("/", savetext.NewDB(log, db.DB))
 		} else {
 			r.With(compress.Gzipper).Post("/", savetext.New(log, storageInstance))
 		}
@@ -168,7 +168,7 @@ func NewRouter(cfg *config.Config) (*slog.Logger, *chi.Mux) {
 	router.Route("/{id}", func(r chi.Router) {
 		if repoDB {
 			// сохраняем в postgresql
-			r.With(compress.Gzipper).Get("/", redirect.NewDB(log, db))
+			r.With(compress.Gzipper).Get("/", redirect.NewDB(log, db.DB))
 		} else {
 			r.With(compress.Gzipper).Get("/", redirect.New(log, storageInstance))
 		}
@@ -181,7 +181,7 @@ func NewRouter(cfg *config.Config) (*slog.Logger, *chi.Mux) {
 	// который при запросе проверяет соединение с базой данных.
 	// При успешной проверке хендлер должен вернуть HTTP-статус 200 OK, при неуспешной — 500 Internal Server Error.
 	//
-	router.Get("/ping", ping.HealthCheckHandler(db)) //app.HealthCheckHandler)
+	router.Get("/ping", ping.HealthCheckHandler(db.DB)) //app.HealthCheckHandler)
 	// router.Get("/", func(w http.ResponseWriter, r *http.Request) {
 	// 	w.Write([]byte("Welcome!"))
 	// })

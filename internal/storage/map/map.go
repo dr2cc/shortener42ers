@@ -2,6 +2,7 @@ package mapstorage
 
 import (
 	"errors"
+	"fmt"
 	filerepo "sh42ers/internal/storage/file"
 )
 
@@ -26,8 +27,10 @@ func NewURLStorage(d map[string]string, f *filerepo.FileRepository) URLStorage {
 }
 
 // метод SaveURL объектов URLStorage
-// реализует интерфейс URLSaver (описан в handlers.go)
+// реализует интерфейсы URLSaver (описан в save.go) и URLtextSaver (описан в savetext.go)
 func (s URLStorage) SaveURL(url string, id string) error {
+	const op = "storage.map.SaveURL"
+
 	s.Data[id] = url
 
 	// iter9
@@ -35,7 +38,7 @@ func (s URLStorage) SaveURL(url string, id string) error {
 	err := s.FileRepo.Save(url, id)
 	//err = repo.Save(url, id)
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("%s: %w", op, err)
 	}
 	//
 
