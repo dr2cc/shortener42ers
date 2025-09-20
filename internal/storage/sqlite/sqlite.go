@@ -1,5 +1,9 @@
 package sqlite
 
+// Вот именно для sqlite нужено включение режима cgo
+// Если cgo включён, можно напрямую исполнять C-код, а результат использовать в Go-коде.
+// https://pkg.go.dev/cmd/cgo
+// На dell не установлена
 import (
 	"database/sql"
 	"errors"
@@ -40,7 +44,7 @@ func New(storagePath string) (*Storage, error) {
 	return &Storage{db: db}, nil
 }
 
-// метод SaveURL типа *Storage , реализует интерфейс URLSaver
+// метод SaveURL типа *Storage , реализует интерфейс URLSaver (описан в handlers.go)
 func (s *Storage) SaveURL(urlToSave string, alias string) (int64, error) {
 	const op = "storage.sqlite.SaveURL"
 

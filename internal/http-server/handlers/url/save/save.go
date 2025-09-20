@@ -29,18 +29,22 @@ type Request struct {
 	Alias string `json:"alias,omitempty"`
 }
 
-// // вызов другой библиотеки генерации моков
-//go::generate mockgen -source=save.go -destination=mocks/URLSaver.go
-
-// // так не работает. Очень быстро развивается! Теперь все в конфигурационном файле
+// // mockery так не работает. Очень быстро развивается! Теперь все в конфигурационном файле
 //
 // // docker run -v "$PWD":/src -w /src vektra/mockery:3
 // // On PS: все, бросил, очень запутанная (06.06.2025)
 // // docker run -v ${PWD}:/src -w /src vektra/mockery:3
 // // docker run -v ${PWD}:/src -w /src vektra/mockery --all
 
-//go:generate go run github.com/vektra/mockery/v2@v2.28.2 --name=URLSaver
+// // вызов другой библиотеки генерации моков
+//go::generate mockgen -source=save.go -destination=mocks/URLSaver.go
 
+// Этот интерфейс описан в функциях
+// storage.map.SaveURL
+// storage.sqlite.SaveURL
+// Нужно сделать такую для pg (по типу sqlite.SaveURL)
+//
+//go:generate go run github.com/vektra/mockery/v2@v2.28.2 --name=URLSaver
 type URLSaver interface {
 	SaveURL(urlToSave string, alias string) error
 }

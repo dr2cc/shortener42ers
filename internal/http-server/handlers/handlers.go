@@ -4,14 +4,15 @@ import (
 	"log/slog"
 	"os"
 	"sh42ers/internal/config"
-	"sh42ers/internal/http-server/handlers/redirect"
-	"sh42ers/internal/http-server/handlers/url/save"
+	"sh42ers/internal/http-server/handlers/ping"
 	"sh42ers/internal/http-server/middleware/compress"
 
+	"sh42ers/internal/http-server/handlers/url/save"
 	savetext "sh42ers/internal/http-server/handlers/url/textsave"
 	myLog "sh42ers/internal/http-server/middleware/logger"
 	filerepo "sh42ers/internal/storage/file"
 	mapstorage "sh42ers/internal/storage/map"
+	"sh42ers/internal/storage/pg"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -23,6 +24,15 @@ const (
 	envProd  = "prod"
 )
 
+// //Объявить переменные окружения:
+// // PS
+// $env:SERVER_ADDRESS="localhost:8080"
+// $env:DATABASE_DSN="postgres://postgres:qwerty@localhost:5432/postgres?sslmode=disable"
+// // bash
+// export SERVER_ADDRESS="localhost:8080"
+// export DATABASE_DSN="postgres://postgres:qwerty@localhost:5432/postgres?sslmode=disable"
+
+// NewRouter creates a new router, adds some middleware, and then adds routes
 func NewRouter(cfg *config.Config) (*slog.Logger, *chi.Mux) {
 
 	log := setupLogger(cfg.Env)
@@ -65,70 +75,106 @@ func NewRouter(cfg *config.Config) (*slog.Logger, *chi.Mux) {
 	// router.Use(middleware.Compress(flate.BestSpeed))
 	// //
 
-	// Парсер URLов поступающих запросов.
-	// Удалит суффикс из пути маршрутизации и продолжит маршрутизацию
+	// Парсер URLов поступающих запросов. Удалит суффикс из пути маршрутизации и продолжит маршрутизацию
 	router.Use(middleware.URLFormat)
 
-	// Примитивное (based on map) хранилище
-	// С июля 2025 не думаю, что пригодиться, но если вдруг..
-	// Оказалось не так! До unit3 сказали оставаться на map
-	mapRepository := make(map[string]string)
+	//repoDB := true
+	var storageInstance savetext.URLtextSaver
 
-	// iter9 Тут создадим мапу из файла
-	repo, err := filerepo.NewFileRepository(cfg.FileRepo) //("pip.json") //("./cmd/shortener/pip.json")
+	db, err := pg.InitDB(log)
 	if err != nil {
-		panic(err)
+		log.Error("Failed to connect to DB", "error", err)
+
+		//repoDB = false
+		//**********************************************************************************
+		// Блок хранения сокращённых URL в файле и  хранению сокращённых URL в памяти
+
+		// Примитивное (based on map) хранилище
+		mapRepository := make(map[string]string)
+
+		// iter9 Тут создадим мапу из файла
+		repo, err := filerepo.NewFileRepository(cfg.FileRepo) //("pip.json") //("./cmd/shortener/pip.json")
+		if err != nil {
+			log.Error(err.Error())
+		}
+		err = repo.ReadFileToMap(mapRepository)
+		if err != nil {
+			log.Error(err.Error())
+		}
+		//
+
+		storageInstance = mapstorage.NewURLStorage(mapRepository, repo) //(make(map[string]string))
+
+		//*******************************************************************************
+
+	} else {
+
+		// iter11
+		// создаем/ проверяем наличие таблицы
+		errStorage := pg.New(log, db.DB)
+		if errStorage != nil {
+			log.Error("failed to init storage")
+			os.Exit(1)
+		}
+
+		//storageInstance = mapstorage.NewURLStorage(mapRepository, repo)
+		storageInstance = db
 	}
-	err = repo.ReadFileToMap(mapRepository)
-	if err != nil {
-		panic(err)
-	}
-	//
 
-	storageInstance := mapstorage.NewURLStorage(mapRepository, repo) //(make(map[string]string))
+	// // Creating an app
+	// app := &pg.App{DB: db}
 
-	// // sqlite.New или "подключает" файл db , а если его нет то создает
-	// storageInstance, err := sqlite.New("./storage.db")
-	// if err != nil {
-	// 	log.Error("failed to initialize storage", sl.Err(err))
-	// }
+	//**routs ***********************************************************************
 
-	// routers
-	//
-	// В Go передача интерфейса параметром в функцию означает,
-	// что функция может принимать на вход объект любого типа,
-	// который реализует определенный интерфейс.
-	//
-	// Хендлер с методом POST принимает параметром интерфейс URLSaver
-	// с единственным методом SaveURL(URL, alias string) error
-	// т.е. два строковых значения .
-	// НО! Самое важное- то, что мы передадим параметром должно
-	// реализовывать МЕТОДЫ интерфейса!
-
-	// JSON POST эндпоинт
-	// который будет принимать в теле запроса JSON-объект
+	// JSON POST endpoint
 	// Можно использовать Use, а можно With . Пока вижу отличия только в синтаксисе
 	router.Route("/api/shorten", func(r chi.Router) {
 		r.Use(compress.Gzipper)
+		// //Надеюсь эта конструкция с 18.09.2025 не понадобится!
+		// if repoDB {
+		// 	r.Post("/", save.New(log, storageInstance))
+		// } else {
 		r.Post("/", save.New(log, storageInstance))
 		//r.With(compress.Gzipper).Post("/", save.New(log, storageInstance))
+		//
+		//}
 	})
-	// // вариант без middleware для gzip
-	// router.Post("/api/shorten", save.New(log, storageInstance))
+	// router.Post("/api/shorten", save.New(log, storageInstance)) // вариант без middleware для gzip
 
 	// TEXT POST эндпойнт
 	router.Route("/", func(r chi.Router) {
+		// if repoDB {
+		// 	// сохраняем в postgresql
+		// 	r.With(compress.Gzipper).Post("/", savetext.NewDB(log, db.DB))
+		// } else {
 		r.With(compress.Gzipper).Post("/", savetext.New(log, storageInstance))
+		//}
 	})
 	// // вариант без middleware для gzip
 	// router.Post("/", savetext.New(log, storageInstance))
 
-	// TEXT GET эндпойнт
-	router.Route("/{id}", func(r chi.Router) {
-		r.With(compress.Gzipper).Get("/", redirect.New(log, storageInstance))
-	})
-	// // вариант без middleware для gzip
-	// router.Get("/{id}", redirect.New(log, storageInstance))
+	// // 20.09.2025 Отключил, не отредактировал здешний storageInstance
+	// // TEXT GET эндпойнт
+	// router.Route("/{id}", func(r chi.Router) {
+	// 	if repoDB {
+	// 		// сохраняем в postgresql
+	// 		r.With(compress.Gzipper).Get("/", redirect.NewDB(log, db.DB))
+	// 	} else {
+	// 		r.With(compress.Gzipper).Get("/", redirect.New(log, storageInstance))
+	// 	}
+	// })
+
+	// router.Get("/{id}", redirect.New(log, storageInstance)) // вариант без middleware для gzip
+
+	// PING endpoint (iter10)
+	// Добавьте в сервис хендлер GET /ping,
+	// который при запросе проверяет соединение с базой данных.
+	// При успешной проверке хендлер должен вернуть HTTP-статус 200 OK, при неуспешной — 500 Internal Server Error.
+	//
+	router.Get("/ping", ping.HealthCheckHandler(db.DB)) //app.HealthCheckHandler)
+	// router.Get("/", func(w http.ResponseWriter, r *http.Request) {
+	// 	w.Write([]byte("Welcome!"))
+	// })
 
 	// // Пример роутера для применения middleware к конкретному роуту в Go с использованием Chi
 	// // Работает так:
@@ -167,3 +213,16 @@ func setupLogger(env string) *slog.Logger {
 
 	return log
 }
+
+//Формат: postgres://user:password@host:port/dbname?sslmode=disable
+//в моем случае:
+// $env:DATABASE_DSN="postgres://postgres:qwerty@localhost:5432/postgres?sslmode=disable"
+
+//go run .\cmd\shortener\main.go
+//go run ./cmd/shortener/main.go
+
+// Строка запуска pg в docker
+//
+//docker run --rm --name container-pg -e POSTGRES_PASSWORD=qwerty -p 5432:5432 -d  postgres
+//
+//docker run -e POSTGRES_PASSWORD=qwerty -p 5432:5432 -v sprint3:/var/lib/postgresql/data -d postgres
