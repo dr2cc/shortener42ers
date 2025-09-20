@@ -5,7 +5,6 @@ import (
 	"os"
 	"sh42ers/internal/config"
 	"sh42ers/internal/http-server/handlers/ping"
-	"sh42ers/internal/http-server/handlers/redirect"
 	"sh42ers/internal/http-server/middleware/compress"
 
 	"sh42ers/internal/http-server/handlers/url/save"
@@ -25,6 +24,15 @@ const (
 	envProd  = "prod"
 )
 
+// //Объявить переменные окружения:
+// // PS
+// $env:SERVER_ADDRESS="localhost:8080"
+// $env:DATABASE_DSN="postgres://postgres:qwerty@localhost:5432/postgres?sslmode=disable"
+// // bash
+// export SERVER_ADDRESS="localhost:8080"
+// export DATABASE_DSN="postgres://postgres:qwerty@localhost:5432/postgres?sslmode=disable"
+
+// NewRouter creates a new router, adds some middleware, and then adds routes
 func NewRouter(cfg *config.Config) (*slog.Logger, *chi.Mux) {
 
 	log := setupLogger(cfg.Env)
@@ -67,23 +75,17 @@ func NewRouter(cfg *config.Config) (*slog.Logger, *chi.Mux) {
 	// router.Use(middleware.Compress(flate.BestSpeed))
 	// //
 
-	// Парсер URLов поступающих запросов.
-	// Удалит суффикс из пути маршрутизации и продолжит маршрутизацию
+	// Парсер URLов поступающих запросов. Удалит суффикс из пути маршрутизации и продолжит маршрутизацию
 	router.Use(middleware.URLFormat)
 
-	repoDB := true
-	var storageInstance mapstorage.URLStorage
-
-	// // Логично сделать так. Тогда не нужно переделывать под реализацию
-	// // и моки будут работать.
-	// // Сейчас ругается TEXT GET эндпойнт
-	// var storageInstance save.URLSaver
+	//repoDB := true
+	var storageInstance savetext.URLtextSaver
 
 	db, err := pg.InitDB(log)
 	if err != nil {
 		log.Error("Failed to connect to DB", "error", err)
-		//os.Exit(1)
-		repoDB = false
+
+		//repoDB = false
 		//**********************************************************************************
 		// Блок хранения сокращённых URL в файле и  хранению сокращённых URL в памяти
 
@@ -114,28 +116,17 @@ func NewRouter(cfg *config.Config) (*slog.Logger, *chi.Mux) {
 			log.Error("failed to init storage")
 			os.Exit(1)
 		}
+
+		//storageInstance = mapstorage.NewURLStorage(mapRepository, repo)
+		storageInstance = db
 	}
 
-	// // iterXX? Creating an app
-	// // Более сложная, но best practice
-	// // Вдруг пригодиться..
+	// // Creating an app
 	// app := &pg.App{DB: db}
 
-	// routers
-	//
-	// В Go передача интерфейса параметром в функцию означает,
-	// что функция может принимать на вход объект любого типа,
-	// который реализует определенный интерфейс.
-	//
-	// Хендлер с методом POST принимает параметром интерфейс URLSaver
-	// с единственным методом SaveURL(URL, alias string) error
-	// т.е. два строковых значения .
-	// НО! Самое важное- то, что мы передадим параметром должно
-	// реализовывать МЕТОДЫ интерфейса!
+	//**routs ***********************************************************************
 
-	// Переделать для iter11
-	// JSON POST эндпоинт
-	// который будет принимать в теле запроса JSON-объект
+	// JSON POST endpoint
 	// Можно использовать Use, а можно With . Пока вижу отличия только в синтаксисе
 	router.Route("/api/shorten", func(r chi.Router) {
 		r.Use(compress.Gzipper)
@@ -145,38 +136,37 @@ func NewRouter(cfg *config.Config) (*slog.Logger, *chi.Mux) {
 		// } else {
 		r.Post("/", save.New(log, storageInstance))
 		//r.With(compress.Gzipper).Post("/", save.New(log, storageInstance))
+		//
 		//}
-
 	})
-	// // вариант без middleware для gzip
-	// router.Post("/api/shorten", save.New(log, storageInstance))
+	// router.Post("/api/shorten", save.New(log, storageInstance)) // вариант без middleware для gzip
 
 	// TEXT POST эндпойнт
 	router.Route("/", func(r chi.Router) {
-		if repoDB {
-			// сохраняем в postgresql
-			r.With(compress.Gzipper).Post("/", savetext.NewDB(log, db.DB))
-		} else {
-			r.With(compress.Gzipper).Post("/", savetext.New(log, storageInstance))
-		}
-
+		// if repoDB {
+		// 	// сохраняем в postgresql
+		// 	r.With(compress.Gzipper).Post("/", savetext.NewDB(log, db.DB))
+		// } else {
+		r.With(compress.Gzipper).Post("/", savetext.New(log, storageInstance))
+		//}
 	})
 	// // вариант без middleware для gzip
 	// router.Post("/", savetext.New(log, storageInstance))
 
-	// TEXT GET эндпойнт
-	router.Route("/{id}", func(r chi.Router) {
-		if repoDB {
-			// сохраняем в postgresql
-			r.With(compress.Gzipper).Get("/", redirect.NewDB(log, db.DB))
-		} else {
-			r.With(compress.Gzipper).Get("/", redirect.New(log, storageInstance))
-		}
-	})
-	// // вариант без middleware для gzip
-	// router.Get("/{id}", redirect.New(log, storageInstance))
+	// // 20.09.2025 Отключил, не отредактировал здешний storageInstance
+	// // TEXT GET эндпойнт
+	// router.Route("/{id}", func(r chi.Router) {
+	// 	if repoDB {
+	// 		// сохраняем в postgresql
+	// 		r.With(compress.Gzipper).Get("/", redirect.NewDB(log, db.DB))
+	// 	} else {
+	// 		r.With(compress.Gzipper).Get("/", redirect.New(log, storageInstance))
+	// 	}
+	// })
 
-	// iter10
+	// router.Get("/{id}", redirect.New(log, storageInstance)) // вариант без middleware для gzip
+
+	// PING endpoint (iter10)
 	// Добавьте в сервис хендлер GET /ping,
 	// который при запросе проверяет соединение с базой данных.
 	// При успешной проверке хендлер должен вернуть HTTP-статус 200 OK, при неуспешной — 500 Internal Server Error.

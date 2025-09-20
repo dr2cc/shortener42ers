@@ -12,19 +12,13 @@ import (
 	_ "github.com/lib/pq"
 )
 
-// // iterXX? App предоставляет основное приложение
-// // Более сложная, но best practice
-// // Вдруг пригодиться..
-// type App struct {
-// 	DB *sql.DB
-// }
-
-type Storage struct {
+// App предоставляет основное приложение (?)
+type App struct {
 	DB *sql.DB
 }
 
 // Инициализация подключения к PostgreSQL
-func InitDB(log *slog.Logger) (*Storage, error) {
+func InitDB(log *slog.Logger) (*App, error) {
 
 	cfg := config.MustLoad()
 	// Getting DSN from environment variables
@@ -60,7 +54,7 @@ func InitDB(log *slog.Logger) (*Storage, error) {
 		return nil, fmt.Errorf("error to ping: %v", err)
 	}
 
-	return &Storage{DB: db}, nil
+	return &App{DB: db}, nil
 }
 
 func New(log *slog.Logger, db *sql.DB) error {
@@ -85,6 +79,24 @@ func New(log *slog.Logger, db *sql.DB) error {
 	if err != nil {
 		panic(err)
 	}
+
+	return nil
+}
+
+func (a *App) SaveURL(url string, alias string) error {
+	const op = "storage.pg.New" // Имя текущей функции для логов и ошибок
+
+	stmt, err := a.DB.Prepare("INSERT INTO aliases(alias, url) VALUES($1, $2)")
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	_, err = stmt.Exec(alias, url)
+
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+	//
 
 	return nil
 }
